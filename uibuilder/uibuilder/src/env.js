@@ -71,7 +71,9 @@ var Communcator = (function () {
     }
     Communcator.prototype.in = function (msg) {
         console.log('[COM]in:', msg);
-        this.toSensorEvent(msg);
+        if (msg.topic == "sesnorUpdate") {
+            this.toSensorEvent(msg);
+        }
     };
     Communcator.prototype.out = function (msg) {
         return;

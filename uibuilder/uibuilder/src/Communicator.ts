@@ -1,3 +1,4 @@
+/// <reference path="protocol/NodeRedMessage.ts" />
 interface COM {
 	in: (msg: any) => void;
 	out: (msg: any) => void;
@@ -7,7 +8,9 @@ class Communcator implements COM {
 	constructor() {}
 	in(msg: any): void {
 		console.log('[COM]in:', msg);
-		this.toSensorEvent(msg);
+		if (msg.topic == NodeRedMessage.SensorUpdate) {
+			this.toSensorEvent(msg);
+		}
 	}
 	out(msg: any): void {
 		return;
