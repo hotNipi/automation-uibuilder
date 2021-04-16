@@ -2,7 +2,9 @@
     "name": "automation-uibuilder",
     "description": "A Node-RED Project",
     "version": "0.0.1",
-    "dependencies": {},
+    "dependencies": {
+        "typescript": "^4.2.4"
+    },
     "node-red": {
         "settings": {
             "flowFile": "flow.json",

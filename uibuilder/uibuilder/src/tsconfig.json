@@ -1,0 +1,9 @@
+{
+    "extends": "../../ts-base-config",
+    "compilerOptions": {
+        "outFile": "env.js"
+    },
+    "files": [
+        "Env.ts"
+    ]
+}

@@ -1,0 +1,31 @@
+
+p {
+    margin:0
+}
+body{
+    font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+.main{
+    display:grid;
+    grid-template-columns: repeat( auto-fill, minmax(140px, 1fr) );
+    gap:.4rem;
+    margin:.5em
+}
+.card{
+    background: gray;
+    min-height: 20px;
+}
+.card div{
+    overflow-wrap: break-word;
+    min-height: 4em;
+    text-align: center;
+    margin: auto 0;
+}
+.card div p{ 
+    font-size: 2em;
+    line-height: 2em;
+}
+.card header{
+    font-size: 1em;
+    text-transform: uppercase;
+}

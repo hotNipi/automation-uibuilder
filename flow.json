@@ -1,1 +1,947 @@
-[]
+[
+    {
+        "id": "41c6f80d.657c48",
+        "type": "tab",
+        "label": "Flow 1",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "f56ccabd.7567e8",
+        "type": "tab",
+        "label": "Flow 2",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "1cdc2a24.b3be46",
+        "type": "mqtt-broker",
+        "name": "kelder",
+        "broker": "192.168.1.111",
+        "port": "1883",
+        "clientid": "",
+        "usetls": false,
+        "compatmode": false,
+        "protocolVersion": "4",
+        "keepalive": "60",
+        "cleansession": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willPayload": "",
+        "willMsg": {},
+        "sessionExpiry": ""
+    },
+    {
+        "id": "c6a4fc1c.14d61",
+        "type": "file in",
+        "z": "f56ccabd.7567e8",
+        "name": "",
+        "filename": "C:\\Users\\Kasutaja\\.node-red\\static\\homecontrol\\init.json",
+        "format": "utf8",
+        "chunk": false,
+        "sendError": false,
+        "encoding": "none",
+        "x": 235,
+        "y": 40,
+        "wires": [
+            [
+                "616bbd4b.f95f14"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "5784fa1.4d45304",
+        "type": "inject",
+        "z": "f56ccabd.7567e8",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 140,
+        "y": 40,
+        "wires": [
+            [
+                "c6a4fc1c.14d61"
+            ]
+        ]
+    },
+    {
+        "id": "616bbd4b.f95f14",
+        "type": "json",
+        "z": "f56ccabd.7567e8",
+        "name": "",
+        "property": "payload",
+        "action": "",
+        "pretty": false,
+        "x": 320,
+        "y": 40,
+        "wires": [
+            [
+                "c0a36ddc.5194f"
+            ]
+        ]
+    },
+    {
+        "id": "c0a36ddc.5194f",
+        "type": "function",
+        "z": "f56ccabd.7567e8",
+        "name": "",
+        "func": "var controllers = []\nvar devices = []\nvar switches = []\nObject.keys(msg.payload.controllers).forEach(c => createController(c))\nObject.keys(msg.payload.devices).forEach(c => createDevice(c))\nObject.keys(msg.payload.switches).forEach(c => createSwitch(c))\nfunction createController(e){\n    controllers.push(e)\n    global.set(msg.payload.controllers[e].name,msg.payload.controllers[e])\n}\nfunction createDevice(e){\n    devices.push(e)\n    global.set(e,msg.payload.devices[e])\n}\nfunction createSwitch(e){\n    switches.push(e)\n    global.set(e,msg.payload.switches[e])\n}\nglobal.set(\"devices\",devices)\nglobal.set(\"controllers\",controllers)\nglobal.set(\"switches\",switches)\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 470,
+        "y": 40,
+        "wires": [
+            [
+                "d53d9df.ba39b6"
+            ]
+        ]
+    },
+    {
+        "id": "d53d9df.ba39b6",
+        "type": "debug",
+        "z": "f56ccabd.7567e8",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 620,
+        "y": 40,
+        "wires": []
+    },
+    {
+        "id": "bd6e4368.4cf46",
+        "type": "mqtt in",
+        "z": "f56ccabd.7567e8",
+        "name": "",
+        "topic": "tele/#",
+        "qos": "1",
+        "datatype": "auto",
+        "broker": "1cdc2a24.b3be46",
+        "x": 130,
+        "y": 220,
+        "wires": [
+            [
+                "d7f2018b.7622f"
+            ]
+        ]
+    },
+    {
+        "id": "73e49156.2b0bc",
+        "type": "change",
+        "z": "f56ccabd.7567e8",
+        "name": "parse topic",
+        "rules": [
+            {
+                "t": "set",
+                "p": "target",
+                "pt": "msg",
+                "to": "$split(msg.topic, \"/\")[1]",
+                "tot": "jsonata"
+            },
+            {
+                "t": "set",
+                "p": "command",
+                "pt": "msg",
+                "to": "$split(msg.topic, \"/\")[2]",
+                "tot": "jsonata"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 395,
+        "y": 220,
+        "wires": [
+            [
+                "6e33a0df.e6401"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "6e33a0df.e6401",
+        "type": "function",
+        "z": "f56ccabd.7567e8",
+        "name": "parse and set",
+        "func": "var target = global.get(msg.target) || null;\nif(target === null){\n    return;\n}\nconst stamp = new Date().getTime()\nlet output = null\n\nswitch(msg.command){\n    case \"LWT\":{\n        target.lastupdate = stamp;\n        target.connection.status = msg.payload\n        global.set(target.name,target)\n        if(target.clients){\n            output = target.clients\n        }\n        break;\n    }\n    case \"STATE\":{\n        const aps = msg.payload.Wifi.BSSId === undefined ? msg.payload.Wifi.APMac : msg.payload.Wifi.BSSId\n        const updateState = (state) => {\n            if(target.clients){\n                output = target.clients\n            }\n            target.states[state] = msg.payload[state]\n        }\n        target.lastupdate = stamp;\n        target.connection.status = \"Online\"\n        target.connection.RSSI = msg.payload.Wifi.RSSI;\n        target.connection.ap = global.get(\"accesspoints\")[aps];\n        Object.keys(target.states).forEach(state => updateState(state))\n        global.set(target.name,target)\n        break;\n    }\n    case\"SENSOR\": {\n        if(target.sensors){\n            let changed = false\n            var targetsensors = target.sensors;\n            var inputsensors = msg.payload;\n            var sensor;\n            var sensortype;\n            for(sensor in targetsensors){\n                if(inputsensors.hasOwnProperty(sensor)){\n                    for(sensortype in inputsensors[sensor]){\n                        if(targetsensors[sensor].hasOwnProperty(sensortype)){\n                            if(isValidSensorChange(sensor,sensortype,targetsensors[sensor][sensortype],inputsensors[sensor][sensortype],targetsensors[sensor].lastupdate)){\n                                targetsensors[sensor][sensortype] = inputsensors[sensor][sensortype];\n                                targetsensors[sensor].lastupdate = stamp;\n                                changed = true\n                           }\n                        }\n                    }\n                }\n            }\n\n            target.connection.status = \"Online\"\n            target.lastupdate = stamp;\n            global.set(target.name,target)\n            if(changed){\n                output = target\n            }\n        }\n        break;\n    }\n    \n}\nfunction isEnvironmental(s){\n    if(s.includes('DS18')){\n        return true\n    }\n    /* if(s.includes('AM2301')){\n        return true\n    }*/\n    return false\n}\n\nfunction isValidSensorChange(sensor,type,current,incoming,lastupdate){\n    //node.warn(sensor+\" \"+type+\" \"+current+\" \"+incoming+\" \"+(stamp-lastupdate))\n    if(current === 0){\n        //might be initial value\n        return true\n    }\n    if(stamp - lastupdate > 60000){\n        //allow if last update is older than minute\n        return true\n    }\n    if(isEnvironmental(sensor)){\n        //filter out spikes\n        if(Math.abs(current - incoming) < 3) {\n            return true\n        }\n        return false\n    }\n    return true\n}\nif(output){\n    msg.payload = output;\n    return msg;\n}\n",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 520,
+        "y": 220,
+        "wires": [
+            [
+                "b3724681.b20348"
+            ]
+        ]
+    },
+    {
+        "id": "d7f2018b.7622f",
+        "type": "json",
+        "z": "f56ccabd.7567e8",
+        "name": "tele",
+        "property": "payload",
+        "action": "",
+        "pretty": false,
+        "x": 270,
+        "y": 220,
+        "wires": [
+            [
+                "73e49156.2b0bc"
+            ]
+        ]
+    },
+    {
+        "id": "9931ca77.f651b8",
+        "type": "catch",
+        "z": "f56ccabd.7567e8",
+        "name": "",
+        "scope": [
+            "d7f2018b.7622f",
+            "88cba432.a05de8",
+            "e309a4be.c9c9a8"
+        ],
+        "uncaught": false,
+        "x": 130,
+        "y": 280,
+        "wires": [
+            [
+                "348add0.38b9224"
+            ]
+        ]
+    },
+    {
+        "id": "348add0.38b9224",
+        "type": "switch",
+        "z": "f56ccabd.7567e8",
+        "name": "TOGGLE ↓ LWT ↑",
+        "property": "topic",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "jsonata_exp",
+                "v": "$contains($split(topic, \"/\")[2] , \"LWT\")\t",
+                "vt": "jsonata"
+            },
+            {
+                "t": "jsonata_exp",
+                "v": "$contains($split(topic, \"/\")[2] , \"POWER\")",
+                "vt": "jsonata"
+            },
+            {
+                "t": "jsonata_exp",
+                "v": "$contains($split(topic, \"/\")[2] , \"POWER1\")",
+                "vt": "jsonata"
+            },
+            {
+                "t": "jsonata_exp",
+                "v": "$contains($split(topic, \"/\")[2] , \"POWER2\")",
+                "vt": "jsonata"
+            }
+        ],
+        "checkall": "false",
+        "repair": false,
+        "outputs": 4,
+        "x": 295,
+        "y": 280,
+        "wires": [
+            [
+                "73e49156.2b0bc"
+            ],
+            [
+                "f21b88a7.bb6d68"
+            ],
+            [
+                "f21b88a7.bb6d68"
+            ],
+            [
+                "f21b88a7.bb6d68"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "6e260a64.ac2454",
+        "type": "change",
+        "z": "f56ccabd.7567e8",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "accesspoints",
+                "pt": "global",
+                "to": "{\"00:22:07:44:27:37\":\"P\",\"98:DE:D0:A0:9F:F6\":\"K\"}",
+                "tot": "json"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 330,
+        "y": 80,
+        "wires": [
+            [
+                "6953f7ee.8027d8"
+            ]
+        ]
+    },
+    {
+        "id": "2a51568.1b68aaa",
+        "type": "inject",
+        "z": "f56ccabd.7567e8",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 130,
+        "y": 80,
+        "wires": [
+            [
+                "6e260a64.ac2454"
+            ]
+        ]
+    },
+    {
+        "id": "b3724681.b20348",
+        "type": "function",
+        "z": "f56ccabd.7567e8",
+        "name": "client",
+        "func": "function updateClient(name){\n    let client = global.get(name)\n    if(client && client.controller){\n        if(client.controller.prop == msg.command){\n            let controller = global.get(client.controller.name)\n            if(client.state != controller.states[client.controller.prop]){\n                client.state = controller.states[client.controller.prop]\n                global.set(client.name,client)\n                node.send({topic:\"clientUpdate\", source:client.name, payload:client.state})\n            }\n        }\n    }\n}\n\nfunction checkClientState(name){\n    let client = global.get(name)\n    if(client){\n        if(client.desiredstate != \"INIT\" && client.desiredstate != client.state){\n            node.send({topic:\"stateMismatchUpdate\", source:client.name, payload:client.desiredstate})\n        }\n    }\n}\n\nfunction sendSensors(c){\n    let controller = global.get(c)\n    if(controller && controller.sensors){\n        Object.keys(controller.sensors).forEach(sensor => {\n            Object.keys(controller.sensors[sensor]).forEach(prop => {\n                if(prop != \"name\" && prop != \"lastupdate\"){\n                    var p = [c,sensor,prop]\n                    node.send({topic:\"sensorUpdate\",protocol:p.join('.'),payload:controller.sensors[sensor][prop],timestamp:controller.sensors[sensor].lastupdate})\n                }\n            })\n        })\n    }\n}\n\nswitch(msg.command){\n    case \"SENSOR\":{\n        sendSensors(msg.target)\n        break\n    }\n    case \"POWER\":\n    case \"POWER1\":\n    case \"POWER2\":\n    case \"RESULT\":{\n        msg.payload.forEach(client => updateClient(client))\n        break;\n    }\n    case \"STATE\": {\n        msg.payload.forEach(client => checkClientState(client))\n        break;\n    }\n    case \"LWT\":{\n        node.send({topic:\"controllerUpdate\",source:msg.target, payload:global.get(msg.target).connection.status})\n        break\n    }\n}",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 690,
+        "y": 200,
+        "wires": [
+            [
+                "140f568a.584269"
+            ]
+        ]
+    },
+    {
+        "id": "55f40931.6a8648",
+        "type": "mqtt in",
+        "z": "f56ccabd.7567e8",
+        "name": "",
+        "topic": "stat/#",
+        "qos": "1",
+        "datatype": "auto",
+        "broker": "1cdc2a24.b3be46",
+        "x": 130,
+        "y": 160,
+        "wires": [
+            [
+                "88cba432.a05de8"
+            ]
+        ]
+    },
+    {
+        "id": "88cba432.a05de8",
+        "type": "json",
+        "z": "f56ccabd.7567e8",
+        "name": "stat",
+        "property": "payload",
+        "action": "",
+        "pretty": false,
+        "x": 270,
+        "y": 160,
+        "wires": [
+            [
+                "980b6987.9507a8"
+            ]
+        ]
+    },
+    {
+        "id": "980b6987.9507a8",
+        "type": "change",
+        "z": "f56ccabd.7567e8",
+        "name": "parse topic",
+        "rules": [
+            {
+                "t": "set",
+                "p": "target",
+                "pt": "msg",
+                "to": "$split(msg.topic, \"/\")[1]",
+                "tot": "jsonata"
+            },
+            {
+                "t": "set",
+                "p": "command",
+                "pt": "msg",
+                "to": "$split(msg.topic, \"/\")[2]",
+                "tot": "jsonata"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 395,
+        "y": 160,
+        "wires": [
+            [
+                "4e2f6e64.bc95d"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "4e2f6e64.bc95d",
+        "type": "function",
+        "z": "f56ccabd.7567e8",
+        "name": "parse and set",
+        "func": "var target = global.get(msg.target) || null;\nif(target === null){\n    return;\n}\nconst stamp = new Date().getTime()\nlet output = null\n\nswitch(msg.command){\n    case \"STATUS5\":{\n        target.connection.ip = msg.payload.StatusNET.IPAddress;\n        global.set(target.name,target)\n        break;\n    }\n    case \"RESULT\":{\n        const updateState = (state) => {\n            target.states[state] = msg.payload[state]\n            if(target.clients){\n                msg.command = state\n                output = target.clients\n            }\n        }\n        target.lastupdate = stamp;\n        target.connection.status = \"Online\"\n        Object.keys(msg.payload).forEach(state => updateState(state))\n        global.set(target.name,target)\n        break;\n    }\n}\n\nif(output){\n    msg.payload = output;\n    return msg;\n}\n",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 520,
+        "y": 160,
+        "wires": [
+            [
+                "b3724681.b20348"
+            ]
+        ]
+    },
+    {
+        "id": "140f568a.584269",
+        "type": "switch",
+        "z": "f56ccabd.7567e8",
+        "name": "",
+        "property": "topic",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "sensorUpdate",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "clientUpdate",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "controllerUpdate",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "stateMismatchUpdate",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 4,
+        "x": 810,
+        "y": 200,
+        "wires": [
+            [
+                "fc65eb8e.101568",
+                "b9b97f33.bc11c"
+            ],
+            [
+                "58ad6961.8135a8",
+                "b9b97f33.bc11c"
+            ],
+            [
+                "4e7142f8.6a683c"
+            ],
+            [
+                "28a99435.e9e60c"
+            ]
+        ]
+    },
+    {
+        "id": "9581b2c8.b659d",
+        "type": "mqtt out",
+        "z": "f56ccabd.7567e8",
+        "name": "",
+        "topic": "",
+        "qos": "1",
+        "retain": "false",
+        "broker": "1cdc2a24.b3be46",
+        "x": 190,
+        "y": 420,
+        "wires": []
+    },
+    {
+        "id": "9943a9d1.828a08",
+        "type": "function",
+        "z": "f56ccabd.7567e8",
+        "name": "",
+        "func": "let device = global.get(\"tvbacklight\")\nlet cmd = \"ON\"\nif(device.state == \"ON\"){\n    cmd = \"OFF\"\n}\ndevice.desiredstate = cmd\nglobal.set(device.name,device)\nmsg.topic = \"cmnd/\"+device.controller.name+\"/\"+device.controller.prop\nmsg.payload = cmd\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 500,
+        "y": 520,
+        "wires": [
+            [
+                "caed7d1f.a64b3"
+            ]
+        ]
+    },
+    {
+        "id": "3a62fea5.8c7242",
+        "type": "function",
+        "z": "f56ccabd.7567e8",
+        "name": "",
+        "func": "//{topic:\"clientUpdate\", source:client.name, payload:client.state}\n\nif(msg.source != \"tvbacklight\"){\n    return\n}\nmsg.color = global.get(\"design.buttons\")[msg.payload]\nmsg.label = global.get(msg.source).displayname\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 240,
+        "y": 520,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "6953f7ee.8027d8",
+        "type": "change",
+        "z": "f56ccabd.7567e8",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "design",
+                "pt": "global",
+                "to": "{\"buttons\":{\"OFF\":\"gray\",\"ON\":\"green\"}}",
+                "tot": "json"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 550,
+        "y": 80,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "90c40163.43e87",
+        "type": "debug",
+        "z": "f56ccabd.7567e8",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 650,
+        "y": 580,
+        "wires": []
+    },
+    {
+        "id": "28a99435.e9e60c",
+        "type": "function",
+        "z": "f56ccabd.7567e8",
+        "name": "mqtt",
+        "func": "let device = global.get(msg.source)\nmsg.topic = \"cmnd/\"+device.controller.name+\"/\"+device.controller.prop\n\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 810,
+        "y": 260,
+        "wires": [
+            [
+                "b264c7b4.3c0ed8"
+            ]
+        ]
+    },
+    {
+        "id": "e49ce0db.9e432",
+        "type": "mqtt in",
+        "z": "f56ccabd.7567e8",
+        "name": "",
+        "topic": "cmnd/#",
+        "qos": "2",
+        "datatype": "auto",
+        "broker": "1cdc2a24.b3be46",
+        "x": 130,
+        "y": 340,
+        "wires": [
+            [
+                "e309a4be.c9c9a8"
+            ]
+        ]
+    },
+    {
+        "id": "e309a4be.c9c9a8",
+        "type": "json",
+        "z": "f56ccabd.7567e8",
+        "name": "cmnd",
+        "property": "payload",
+        "action": "",
+        "pretty": false,
+        "x": 270,
+        "y": 340,
+        "wires": [
+            [
+                "f21b88a7.bb6d68"
+            ]
+        ]
+    },
+    {
+        "id": "f21b88a7.bb6d68",
+        "type": "change",
+        "z": "f56ccabd.7567e8",
+        "name": "parse topic",
+        "rules": [
+            {
+                "t": "set",
+                "p": "target",
+                "pt": "msg",
+                "to": "$split(msg.topic, \"/\")[1]",
+                "tot": "jsonata"
+            },
+            {
+                "t": "set",
+                "p": "command",
+                "pt": "msg",
+                "to": "$split(msg.topic, \"/\")[2]",
+                "tot": "jsonata"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 395,
+        "y": 280,
+        "wires": [
+            [
+                "b4e8534c.40077"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "b4e8534c.40077",
+        "type": "function",
+        "z": "f56ccabd.7567e8",
+        "name": "parse manual",
+        "func": "var target = global.get(msg.target) || null;\nif(target === null){\n    return;\n}\n\nlet output = null\n\nfunction sendSwitchCommand(){\n    let clientname = target.clients[msg.command] || null\n    if(!clientname){\n        return\n    }\n    let client = global.get(clientname) || null\n    if(!client){\n        return\n    }\n    switch(target.operation[msg.command]){\n        case \"TOGGLE\":{\n            client.desiredstate = client.state == \"OFF\" ? \"ON\" : \"OFF\"\n            global.set(client.name,client)\n            msg.payload = client.desiredstate,\n            msg.source = client.name\n            msg.topic = \"commandToMQTT\"\n            output = true\n            break\n        }\n        case \"ACK\":{\n            client.desiredstate = client.state == \"OFF\" ? \"ON\" : \"OFF\"\n            global.set(client.name,client)\n            msg.payload = client.desiredstate,\n            msg.source = client.name;\n            msg.topic = \"commandToClient\"\n            output = true\n            break\n        }\n    }\n}\n\nswitch(msg.command){\n    case \"POWER1\":\n    case \"POWER2\":{\n        sendSwitchCommand()\n        break;\n    }\n}\n\nif(output){\n    return msg;\n}\n",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 520,
+        "y": 280,
+        "wires": [
+            [
+                "4ea6a675.6de238"
+            ]
+        ]
+    },
+    {
+        "id": "4ea6a675.6de238",
+        "type": "switch",
+        "z": "f56ccabd.7567e8",
+        "name": "",
+        "property": "topic",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "commandToMQTT",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "commandToClient",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 670,
+        "y": 280,
+        "wires": [
+            [
+                "28a99435.e9e60c"
+            ],
+            [
+                "887fa668.f1f028"
+            ]
+        ]
+    },
+    {
+        "id": "fc65eb8e.101568",
+        "type": "link out",
+        "z": "f56ccabd.7567e8",
+        "name": "sensorUpdate",
+        "links": [
+            "139415e3.cca99a",
+            "7bb9ea7f.8aec24"
+        ],
+        "x": 955,
+        "y": 100,
+        "wires": []
+    },
+    {
+        "id": "58ad6961.8135a8",
+        "type": "link out",
+        "z": "f56ccabd.7567e8",
+        "name": "clientUpdate",
+        "links": [
+            "d92a98ad.7f5aa8"
+        ],
+        "x": 975,
+        "y": 160,
+        "wires": []
+    },
+    {
+        "id": "4e7142f8.6a683c",
+        "type": "link out",
+        "z": "f56ccabd.7567e8",
+        "name": "controllerUpdate",
+        "links": [],
+        "x": 975,
+        "y": 220,
+        "wires": []
+    },
+    {
+        "id": "d92a98ad.7f5aa8",
+        "type": "link in",
+        "z": "f56ccabd.7567e8",
+        "name": "btn-backlight-in",
+        "links": [
+            "58ad6961.8135a8"
+        ],
+        "x": 135,
+        "y": 520,
+        "wires": [
+            [
+                "3a62fea5.8c7242"
+            ]
+        ]
+    },
+    {
+        "id": "b264c7b4.3c0ed8",
+        "type": "link out",
+        "z": "f56ccabd.7567e8",
+        "name": "mqttCMND",
+        "links": [],
+        "x": 975,
+        "y": 280,
+        "wires": []
+    },
+    {
+        "id": "887fa668.f1f028",
+        "type": "link out",
+        "z": "f56ccabd.7567e8",
+        "name": "manualSwitch",
+        "links": [],
+        "x": 955,
+        "y": 340,
+        "wires": []
+    },
+    {
+        "id": "d9eb534.83240b",
+        "type": "link in",
+        "z": "f56ccabd.7567e8",
+        "name": "mqtt-in",
+        "links": [
+            "caed7d1f.a64b3"
+        ],
+        "x": 95,
+        "y": 420,
+        "wires": [
+            [
+                "9581b2c8.b659d"
+            ]
+        ]
+    },
+    {
+        "id": "caed7d1f.a64b3",
+        "type": "link out",
+        "z": "f56ccabd.7567e8",
+        "name": "btn-backlight-out",
+        "links": [
+            "d9eb534.83240b"
+        ],
+        "x": 615,
+        "y": 520,
+        "wires": []
+    },
+    {
+        "id": "7bb9ea7f.8aec24",
+        "type": "link in",
+        "z": "f56ccabd.7567e8",
+        "name": "toUi",
+        "links": [
+            "fc65eb8e.101568"
+        ],
+        "x": 315,
+        "y": 660,
+        "wires": [
+            [
+                "efd1a703.f31b08"
+            ]
+        ]
+    },
+    {
+        "id": "b9b97f33.bc11c",
+        "type": "debug",
+        "z": "f56ccabd.7567e8",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 980,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "f218164e.bfcbf8",
+        "type": "catch",
+        "z": "f56ccabd.7567e8",
+        "name": "",
+        "scope": null,
+        "uncaught": true,
+        "x": 450,
+        "y": 600,
+        "wires": [
+            [
+                "90c40163.43e87"
+            ]
+        ]
+    },
+    {
+        "id": "da2dbbd7.086408",
+        "type": "inject",
+        "z": "f56ccabd.7567e8",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 220,
+        "y": 780,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "794a2c82.81be64",
+        "type": "debug",
+        "z": "f56ccabd.7567e8",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 620,
+        "y": 800,
+        "wires": []
+    },
+    {
+        "id": "efd1a703.f31b08",
+        "type": "uibuilder",
+        "z": "f56ccabd.7567e8",
+        "name": "",
+        "topic": "",
+        "url": "uibuilder",
+        "fwdInMessages": false,
+        "allowScripts": false,
+        "allowStyles": false,
+        "copyIndex": true,
+        "templateFolder": "blank",
+        "showfolder": false,
+        "useSecurity": false,
+        "sessionLength": 432000,
+        "tokenAutoExtend": false,
+        "x": 390,
+        "y": 800,
+        "wires": [
+            [],
+            []
+        ]
+    }
+]
