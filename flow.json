@@ -14,6 +14,13 @@
         "info": ""
     },
     {
+        "id": "63163740.2d4508",
+        "type": "tab",
+        "label": "TESTBOARD",
+        "disabled": false,
+        "info": ""
+    },
+    {
         "id": "1cdc2a24.b3be46",
         "type": "mqtt-broker",
         "name": "kelder",
@@ -38,6 +45,138 @@
         "willPayload": "",
         "willMsg": {},
         "sessionExpiry": ""
+    },
+    {
+        "id": "19f5ed07.08a453",
+        "type": "ui_group",
+        "name": "Default",
+        "tab": "c71e2691.3704f8",
+        "order": 2,
+        "disp": true,
+        "width": "6",
+        "collapse": false
+    },
+    {
+        "id": "c71e2691.3704f8",
+        "type": "ui_tab",
+        "name": "Home",
+        "icon": "dashboard",
+        "disabled": false,
+        "hidden": false
+    },
+    {
+        "id": "4cba3bfa.4b1ed4",
+        "type": "ui_base",
+        "theme": {
+            "name": "theme-custom",
+            "lightTheme": {
+                "default": "#0094CE",
+                "baseColor": "#0094CE",
+                "baseFont": "-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen-Sans,Ubuntu,Cantarell,Helvetica Neue,sans-serif",
+                "edited": true,
+                "reset": false
+            },
+            "darkTheme": {
+                "default": "#097479",
+                "baseColor": "#097479",
+                "baseFont": "-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen-Sans,Ubuntu,Cantarell,Helvetica Neue,sans-serif",
+                "edited": false
+            },
+            "customTheme": {
+                "name": "Untitled Theme 1",
+                "default": "#4B7930",
+                "baseColor": "#4B7930",
+                "baseFont": "-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen-Sans,Ubuntu,Cantarell,Helvetica Neue,sans-serif",
+                "reset": false
+            },
+            "themeState": {
+                "base-color": {
+                    "default": "#4B7930",
+                    "value": "#4B7930",
+                    "edited": false
+                },
+                "page-titlebar-backgroundColor": {
+                    "value": "#4B7930",
+                    "edited": false
+                },
+                "page-backgroundColor": {
+                    "value": "#111111",
+                    "edited": false
+                },
+                "page-sidebar-backgroundColor": {
+                    "value": "#333333",
+                    "edited": false
+                },
+                "group-textColor": {
+                    "value": "#6db046",
+                    "edited": false
+                },
+                "group-borderColor": {
+                    "value": "#555555",
+                    "edited": false
+                },
+                "group-backgroundColor": {
+                    "value": "#333333",
+                    "edited": false
+                },
+                "widget-textColor": {
+                    "value": "#eeeeee",
+                    "edited": false
+                },
+                "widget-backgroundColor": {
+                    "value": "#4b7930",
+                    "edited": false
+                },
+                "widget-borderColor": {
+                    "value": "#484747",
+                    "edited": true
+                },
+                "base-font": {
+                    "value": "-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen-Sans,Ubuntu,Cantarell,Helvetica Neue,sans-serif"
+                }
+            },
+            "angularTheme": {
+                "primary": "indigo",
+                "accents": "blue",
+                "warn": "red",
+                "background": "grey"
+            }
+        },
+        "site": {
+            "name": "Node-RED Dashboard",
+            "hideToolbar": "false",
+            "allowSwipe": "false",
+            "lockMenu": "false",
+            "allowTempTheme": "true",
+            "dateFormat": "DD/MM/YYYY",
+            "sizes": {
+                "sx": 48,
+                "sy": 48,
+                "gx": 6,
+                "gy": 6,
+                "cx": 6,
+                "cy": 6,
+                "px": 0,
+                "py": 0
+            }
+        }
+    },
+    {
+        "id": "89295a31.c00768",
+        "type": "ui_group",
+        "name": "GPortSimulator 1",
+        "tab": "c71e2691.3704f8",
+        "order": 1,
+        "disp": true,
+        "width": "6",
+        "collapse": false
+    },
+    {
+        "id": "1309dc77.e283d4",
+        "type": "ui_tab",
+        "name": "TestBord",
+        "icon": "dashboard",
+        "order": 1
     },
     {
         "id": "c6a4fc1c.14d61",
@@ -352,14 +491,14 @@
         "id": "b3724681.b20348",
         "type": "function",
         "z": "f56ccabd.7567e8",
-        "name": "client",
+        "name": "convert to message",
         "func": "function updateClient(name){\n    let client = global.get(name)\n    if(client && client.controller){\n        if(client.controller.prop == msg.command){\n            let controller = global.get(client.controller.name)\n            if(client.state != controller.states[client.controller.prop]){\n                client.state = controller.states[client.controller.prop]\n                global.set(client.name,client)\n                node.send({topic:\"clientUpdate\", source:client.name, payload:client.state})\n            }\n        }\n    }\n}\n\nfunction checkClientState(name){\n    let client = global.get(name)\n    if(client){\n        if(client.desiredstate != \"INIT\" && client.desiredstate != client.state){\n            node.send({topic:\"stateMismatchUpdate\", source:client.name, payload:client.desiredstate})\n        }\n    }\n}\n\nfunction sendSensors(c){\n    let controller = global.get(c)\n    if(controller && controller.sensors){\n        Object.keys(controller.sensors).forEach(sensor => {\n            Object.keys(controller.sensors[sensor]).forEach(prop => {\n                if(prop != \"name\" && prop != \"lastupdate\"){\n                    var p = [c,sensor,prop]\n                    node.send({topic:\"sensorUpdate\",protocol:p.join('.'),payload:controller.sensors[sensor][prop],timestamp:controller.sensors[sensor].lastupdate})\n                }\n            })\n        })\n    }\n}\n\nswitch(msg.command){\n    case \"SENSOR\":{\n        sendSensors(msg.target)\n        break\n    }\n    case \"POWER\":\n    case \"POWER1\":\n    case \"POWER2\":\n    case \"RESULT\":{\n        msg.payload.forEach(client => updateClient(client))\n        break;\n    }\n    case \"STATE\": {\n        msg.payload.forEach(client => checkClientState(client))\n        break;\n    }\n    case \"LWT\":{\n        node.send({topic:\"controllerUpdate\",source:msg.target, payload:global.get(msg.target).connection.status})\n        break\n    }\n}",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 690,
+        "x": 730,
         "y": 200,
         "wires": [
             [
@@ -486,16 +625,14 @@
         "checkall": "true",
         "repair": false,
         "outputs": 4,
-        "x": 810,
+        "x": 890,
         "y": 200,
         "wires": [
             [
-                "fc65eb8e.101568",
-                "b9b97f33.bc11c"
+                "fc65eb8e.101568"
             ],
             [
-                "58ad6961.8135a8",
-                "b9b97f33.bc11c"
+                "58ad6961.8135a8"
             ],
             [
                 "4e7142f8.6a683c"
@@ -690,6 +827,7 @@
         "noerr": 0,
         "initialize": "",
         "finalize": "",
+        "libs": [],
         "x": 520,
         "y": 280,
         "wires": [
@@ -740,7 +878,7 @@
             "139415e3.cca99a",
             "7bb9ea7f.8aec24"
         ],
-        "x": 955,
+        "x": 1035,
         "y": 100,
         "wires": []
     },
@@ -752,7 +890,7 @@
         "links": [
             "d92a98ad.7f5aa8"
         ],
-        "x": 975,
+        "x": 1055,
         "y": 160,
         "wires": []
     },
@@ -762,7 +900,7 @@
         "z": "f56ccabd.7567e8",
         "name": "controllerUpdate",
         "links": [],
-        "x": 975,
+        "x": 1055,
         "y": 220,
         "wires": []
     },
@@ -788,7 +926,7 @@
         "z": "f56ccabd.7567e8",
         "name": "mqttCMND",
         "links": [],
-        "x": 975,
+        "x": 1055,
         "y": 280,
         "wires": []
     },
@@ -798,7 +936,7 @@
         "z": "f56ccabd.7567e8",
         "name": "manualSwitch",
         "links": [],
-        "x": 955,
+        "x": 1035,
         "y": 340,
         "wires": []
     },
@@ -842,26 +980,10 @@
         "y": 660,
         "wires": [
             [
-                "efd1a703.f31b08"
+                "efd1a703.f31b08",
+                "794a2c82.81be64"
             ]
         ]
-    },
-    {
-        "id": "b9b97f33.bc11c",
-        "type": "debug",
-        "z": "f56ccabd.7567e8",
-        "name": "",
-        "active": false,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "true",
-        "targetType": "full",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 980,
-        "y": 60,
-        "wires": []
     },
     {
         "id": "f218164e.bfcbf8",
@@ -910,14 +1032,15 @@
         "type": "debug",
         "z": "f56ccabd.7567e8",
         "name": "",
-        "active": true,
+        "active": false,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
-        "complete": "false",
+        "complete": "true",
+        "targetType": "full",
         "statusVal": "",
         "statusType": "auto",
-        "x": 620,
+        "x": 600,
         "y": 800,
         "wires": []
     },
@@ -940,8 +1063,208 @@
         "x": 390,
         "y": 800,
         "wires": [
-            [],
+            [
+                "895d4342.c5aa8"
+            ],
             []
         ]
+    },
+    {
+        "id": "535a18ea.47f1f8",
+        "type": "ui_button",
+        "z": "63163740.2d4508",
+        "name": "",
+        "group": "89295a31.c00768",
+        "order": 5,
+        "width": "6",
+        "height": "3",
+        "passthru": false,
+        "label": "",
+        "color": "{{color}}",
+        "bgcolor": "{{bgcolor}}",
+        "icon": "{{icon}}",
+        "payload": "",
+        "payloadType": "str",
+        "topic": "",
+        "x": 750,
+        "y": 160,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "9c7f5b9e.f3e318",
+        "type": "function",
+        "z": "63163740.2d4508",
+        "name": "FixIconColor",
+        "func": "var k = msg.payload\nif (k===0) msg = {color:\"#FFFF00\",bgcolor:\"black\",icon:\"fa-4x fa-spinner fa-pulse\"};\nif (k===1) msg = {color:\"#00FF00\",bgcolor:\"black\",icon:\"fa-4x fa-download\"};\nif (k===2) msg = {color:\"#FF0000\",bgcolor:\"black\",icon:\"fa-4x fa-upload\"};\nif (k===3) msg = {color:\"#FF0000\",bgcolor:\"black\",icon:\"fa-4x fa-exclamation-triangle\"};\n\n/*  0=moving\n    1=closed\n    2=opened\n    3=error   */\nmsg.payload = k;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 470,
+        "y": 160,
+        "wires": [
+            [
+                "535a18ea.47f1f8",
+                "f99ebc1b.60c9"
+            ]
+        ]
+    },
+    {
+        "id": "d1362218.b5d5e",
+        "type": "ui_button",
+        "z": "63163740.2d4508",
+        "name": "",
+        "group": "89295a31.c00768",
+        "order": 2,
+        "width": 0,
+        "height": 0,
+        "passthru": false,
+        "label": "InMiddle",
+        "color": "",
+        "bgcolor": "",
+        "icon": "",
+        "payload": "0",
+        "payloadType": "num",
+        "topic": "",
+        "x": 160,
+        "y": 220,
+        "wires": [
+            [
+                "9c7f5b9e.f3e318"
+            ]
+        ]
+    },
+    {
+        "id": "2e15ddfb.c2d3e2",
+        "type": "ui_button",
+        "z": "63163740.2d4508",
+        "name": "",
+        "group": "89295a31.c00768",
+        "order": 3,
+        "width": 0,
+        "height": 0,
+        "passthru": false,
+        "label": "Closed",
+        "color": "",
+        "bgcolor": "",
+        "icon": "",
+        "payload": "1",
+        "payloadType": "num",
+        "topic": "",
+        "x": 160,
+        "y": 260,
+        "wires": [
+            [
+                "9c7f5b9e.f3e318"
+            ]
+        ]
+    },
+    {
+        "id": "6bdd972a.905108",
+        "type": "ui_button",
+        "z": "63163740.2d4508",
+        "name": "",
+        "group": "89295a31.c00768",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "passthru": false,
+        "label": "Opened",
+        "color": "",
+        "bgcolor": "",
+        "icon": "",
+        "payload": "2",
+        "payloadType": "num",
+        "topic": "",
+        "x": 160,
+        "y": 180,
+        "wires": [
+            [
+                "9c7f5b9e.f3e318"
+            ]
+        ]
+    },
+    {
+        "id": "4161a979.0b0a18",
+        "type": "ui_button",
+        "z": "63163740.2d4508",
+        "name": "",
+        "group": "89295a31.c00768",
+        "order": 4,
+        "width": 0,
+        "height": 0,
+        "passthru": false,
+        "label": "ErrOpenAndClosed",
+        "color": "",
+        "bgcolor": "",
+        "icon": "",
+        "payload": "3",
+        "payloadType": "num",
+        "topic": "",
+        "x": 190,
+        "y": 140,
+        "wires": [
+            [
+                "9c7f5b9e.f3e318"
+            ]
+        ]
+    },
+    {
+        "id": "f99ebc1b.60c9",
+        "type": "debug",
+        "z": "63163740.2d4508",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "x": 750,
+        "y": 220,
+        "wires": []
+    },
+    {
+        "id": "9345c25e.26eaf",
+        "type": "ui_slider",
+        "z": "63163740.2d4508",
+        "name": "",
+        "label": "slider",
+        "tooltip": "",
+        "group": "19f5ed07.08a453",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "passthru": true,
+        "outs": "all",
+        "topic": "topic",
+        "topicType": "msg",
+        "min": 0,
+        "max": 10,
+        "step": 1,
+        "x": 380,
+        "y": 320,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "895d4342.c5aa8",
+        "type": "debug",
+        "z": "f56ccabd.7567e8",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 540,
+        "y": 900,
+        "wires": []
     }
 ]

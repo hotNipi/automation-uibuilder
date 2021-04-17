@@ -1,31 +1,93 @@
-
+:root {
+	--lightText: #f5f5dc;
+}
 p {
-    margin:0
+	margin: 0;
 }
-body{
-    font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+body {
+	font-family: 'Calibri';
+	background-color: rgb(27, 27, 27);
+	background-image: url(images/bgr.jpg);
+	margin: 0;
 }
-.main{
-    display:grid;
-    grid-template-columns: repeat( auto-fill, minmax(140px, 1fr) );
-    gap:.4rem;
-    margin:.5em
+.main {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+	gap: 0.4em;
+	margin: 0.4em;
 }
-.card{
-    background: gray;
-    min-height: 20px;
+.card {
+	background: rgba(255, 255, 255, 0.12);
+	min-height: 20px;
+	border: 1px solid #f5f5dc50;
+	border-radius: 0.25em;
 }
-.card div{
-    overflow-wrap: break-word;
-    min-height: 4em;
-    text-align: center;
-    margin: auto 0;
+.card header {
+	font-size: 1em;
+	color: var(--lightText);
+	text-transform: uppercase;
+	padding-left: 0.25em;
+	white-space: nowrap;
 }
-.card div p{ 
-    font-size: 2em;
-    line-height: 2em;
+.card header.subheader {
+	font-size: 0.65em;
+	padding-left: 0.45em;
 }
-.card header{
-    font-size: 1em;
-    text-transform: uppercase;
+.fillgauge {
+	position: relative;
+	height: 5em;
+}
+.fillgauge .bar {
+	position: absolute;
+	height: 0;
+	background: red;
+	width: 100%;
+	bottom: 0%;
+	transition: all 2s ease-in-out;
+	z-index: 5;
+	opacity: 1;
+	box-shadow: 0px -6px 6px 0 #1b1b1b2b;
+}
+.fillgauge .value {
+	position: relative;
+	color: var(--lightText);
+	text-align: center;
+	font-size: 2rem;
+	text-shadow: 0 0 4px #00000060;
+	z-index: 10;
+	top: 50%;
+	transform: translateY(-50%);
+}
+.fillgauge .unit {
+	font-size: 1rem;
+	padding-left: 0.25em;
+	vertical-align: super;
+}
+.fillgauge:after {
+	content: '';
+	width: 0.5em;
+	position: absolute;
+	height: 100%;
+	top: 0;
+	right: 0;
+	z-index: 15;
+	opacity: 0.6;
+	background-image: linear-gradient(var(--lightText) 33%, rgba(255, 255, 255, 0) 0%);
+	background-position: right;
+	background-size: 0.5em 0.25em;
+	background-repeat: repeat-y;
+}
+.fillgauge .minmax {
+	color: var(--lightText);
+	position: absolute;
+	font-size: 0.7rem;
+	right: 1.15em;
+	text-align: right;
+	z-index: 20;
+}
+.fillgauge .minmax.min {
+	bottom: 0;
+}
+.fillgauge .minmax.max {
+	top: 0;
 }

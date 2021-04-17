@@ -9,6 +9,7 @@ declare interface Window {
 class Env {
 	private display: ILayout;
 	private communicator: COM;
+	private receiver: any;
 	constructor() {
 		this.communicator = new Communcator();
 		COM = this.communicator;
@@ -19,6 +20,9 @@ class Env {
 	}
 	incoming(msg: any): void {
 		COM.in(msg);
+	}
+	setReceiver(f: any): void {
+		COM.setReceiver(f);
 	}
 }
 window.env = Env;

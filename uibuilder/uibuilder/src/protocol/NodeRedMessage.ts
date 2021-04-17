@@ -1,3 +1,3 @@
 const enum NodeRedMessage {
-	SensorUpdate = 'sesnorUpdate',
+	SensorUpdate = 'sensorUpdate',
 }

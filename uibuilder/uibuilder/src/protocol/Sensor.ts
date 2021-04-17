@@ -22,11 +22,3 @@ interface DS18B20 {
 	lastupdate: number;
 	Temperature: number;
 }
-interface SensorUpdate {
-	type: ClientEvents.SensorUpdate;
-	protocol: string;
-	data: number;
-}
-interface ClientUpdate {
-	type: ClientEvents.ClientUpdate;
-}

@@ -10,5 +10,7 @@ window.onload = function() {
     uibuilder.onChange('msg', function(msg){
         env.incoming(msg)
     })
+    env.setReceiver(uibuilder.send.bind(this))
+    //uibuilder.send( { 'topic': 'from-the-front', 'payload': 42 } )
     
 }

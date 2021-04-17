@@ -1,4 +1,110 @@
 "use strict";
+var Calc = (function () {
+    function Calc() {
+    }
+    Calc.range = function (n, p, type, round, fixto) {
+        if (type == 'clamp') {
+            if (n < p.minin) {
+                n = p.minin;
+            }
+            if (n > p.maxin) {
+                n = p.maxin;
+            }
+        }
+        if (type == 'roll') {
+            var d = p.maxin - p.minin;
+            n = ((((n - p.minin) % d) + d) % d) + p.minin;
+        }
+        var v = ((n - p.minin) / (p.maxin - p.minin)) * (p.maxout - p.minout) + p.minout;
+        if (round) {
+            v = Math.round(v);
+        }
+        else {
+            if (fixto) {
+                v = parseFloat(v.toFixed(fixto));
+            }
+        }
+        return v;
+    };
+    return Calc;
+}());
+var FillGauge = (function () {
+    function FillGauge(min, max) {
+        this.min = min;
+        this.max = max;
+        this.color = '#FF0000';
+        this.unit = '';
+        this.animation = -1;
+        this.init();
+    }
+    FillGauge.prototype.init = function () {
+        this.html = document.createElement('div');
+        this.html.className = 'fillgauge';
+        this.content = document.createElement('div');
+        this.content.className = 'bar';
+        this.fields = document.createElement('div');
+        this.fields.className = 'value';
+        this.field = document.createElement('span');
+        this.unitfield = document.createElement('span');
+        this.unitfield.className = 'unit';
+        this.minfield = document.createElement('div');
+        this.minfield.className = 'minmax min';
+        this.maxfield = document.createElement('div');
+        this.maxfield.className = 'minmax max';
+        this.html.appendChild(this.minfield);
+        this.html.appendChild(this.maxfield);
+        this.html.appendChild(this.content);
+        this.fields.appendChild(this.field);
+        this.fields.appendChild(this.unitfield);
+        this.html.appendChild(this.fields);
+        this.minfield.innerHTML = this.min.toString();
+        this.maxfield.innerHTML = this.max.toString();
+        this.unitfield.innerHTML = this.unit;
+    };
+    FillGauge.prototype.update = function (value) {
+        this.field.innerText = value.toString();
+        var p = Calc.range(value, { minin: this.min, maxin: this.max, minout: 0, maxout: 100 }, 'clamp', false, 2);
+        this.content.style.height = p + '%';
+        if (this.lastvalue == value) {
+            return;
+        }
+        this.animate();
+        this.lastvalue = value;
+    };
+    FillGauge.prototype.setOptions = function (min, max, color, unit) {
+        this.min = min ? min : this.min;
+        this.max = max ? max : this.max;
+        this.color = color ? color : this.color;
+        this.unit = unit ? unit : this.unit;
+        this.updateVisual();
+        this.update(isNaN(parseFloat(this.field.innerHTML)) ? 0 : parseFloat(this.field.innerHTML));
+    };
+    FillGauge.prototype.getHTML = function () {
+        return this.html;
+    };
+    FillGauge.prototype.updateVisual = function () {
+        this.content.style.backgroundColor = this.color;
+        this.unitfield.innerHTML = this.unit;
+        this.minfield.innerHTML = this.min.toString();
+        this.maxfield.innerHTML = this.max.toString();
+    };
+    FillGauge.prototype.animate = function () {
+        var _this = this;
+        if (this.animation != -1) {
+            clearTimeout(this.animation);
+        }
+        this.content.style.opacity = '0.7';
+        this.animation = setTimeout(function () {
+            _this.clearAnimation();
+        }, 3000);
+    };
+    FillGauge.prototype.clearAnimation = function () {
+        clearTimeout(this.animation);
+        this.content.style.opacity = '0.4';
+        this.animation = -1;
+    };
+    return FillGauge;
+}());
 var DefaultCard = (function () {
     function DefaultCard() {
         this.init();
@@ -20,36 +126,142 @@ var DefaultCard = (function () {
         this.html.className = 'card';
         this.header = document.createElement('header');
         this.html.appendChild(this.header);
-        this.content = document.createElement('div');
+        this.content = new FillGauge(15, 100);
         this.field = document.createElement('p');
-        this.content.appendChild(this.field);
-        this.html.appendChild(this.content);
+        this.html.appendChild(this.field);
+        this.html.appendChild(this.content.getHTML());
         ClientEventDispacher.register(0, this.onSensorUpdate, this);
     };
     DefaultCard.prototype.onSensorUpdate = function (msg) {
         if (msg.protocol == this.protocol) {
-            this.setContent(msg.data.toString());
+            this.content.update(msg.data);
         }
     };
     return DefaultCard;
+}());
+var GaugeCard = (function () {
+    function GaugeCard() {
+        this.init();
+    }
+    GaugeCard.prototype.getHTML = function () {
+        return this.html;
+    };
+    GaugeCard.prototype.setProtocol = function (src) {
+        this.protocol = src;
+    };
+    GaugeCard.prototype.setHeader = function (main, sub) {
+        this.header.innerHTML = main;
+        this.subheader.innerHTML = sub;
+    };
+    GaugeCard.prototype.setOptions = function (min, max, color, unit) {
+        this.content.setOptions(min, max, color, unit);
+    };
+    GaugeCard.prototype.init = function () {
+        this.html = document.createElement('div');
+        this.html.className = 'card';
+        this.header = document.createElement('header');
+        this.subheader = document.createElement('header');
+        this.subheader.className = 'subheader';
+        this.html.appendChild(this.header);
+        this.html.appendChild(this.subheader);
+        this.content = new FillGauge(15, 100);
+        this.html.appendChild(this.content.getHTML());
+        ClientEventDispacher.register(0, this.onSensorUpdate, this);
+    };
+    GaugeCard.prototype.onSensorUpdate = function (msg) {
+        if (msg.protocol == this.protocol) {
+            this.content.update(msg.data);
+        }
+    };
+    return GaugeCard;
 }());
 var DefaultView = (function () {
     function DefaultView(root) {
         this.root = root;
     }
     DefaultView.prototype.build = function () {
-        var cards = ['saun', 'eesruum', 'vannituba', 'küte'];
-        var protocols = [
-            'sonoff-saun.DS18B20.Temperature',
-            'sonoff-saun.AM2301.Temperature',
-            'sonoff-th-wc.AM2301.Temperature',
-            'sonoff-floorheating-temps.DS18B20-1.Temperature',
+        var cards = [
+            {
+                label: 'saun',
+                sublabel: 'leiliruum',
+                type: 1,
+                protocol: 'sonoff-saun.DS18B20.Temperature',
+                options: { min: 15, max: 100, color: '#007800', unit: '°C' },
+            },
+            {
+                label: 'saun',
+                sublabel: 'puhkeruum',
+                type: 1,
+                protocol: 'sonoff-saun.AM2301.Temperature',
+                options: { min: 15, max: 30, color: '#007800', unit: '°C' },
+            },
+            {
+                label: 'saun',
+                sublabel: 'eesruum',
+                type: 1,
+                protocol: 'sonoff-floorheating-temps.DS18B20-5.Temperature',
+                options: { min: 15, max: 30, color: '#007800', unit: '°C' },
+            },
+            {
+                label: 'saun',
+                sublabel: 'niiskus',
+                type: 1,
+                protocol: 'sonoff-saun.AM2301.Humidity',
+                options: { min: 30, max: 100, color: '#005599', unit: '%' },
+            },
+            {
+                label: 'vannituba',
+                sublabel: 'temperatuur',
+                type: 1,
+                protocol: 'sonoff-th-wc.AM2301.Temperature',
+                options: { min: 15, max: 30, color: '#007800', unit: '°C' },
+            },
+            {
+                label: 'vannituba',
+                sublabel: 'niiskus',
+                type: 1,
+                protocol: 'sonoff-th-wc.AM2301.Humidity',
+                options: { min: 30, max: 100, color: '#005599', unit: '%' },
+            },
+            {
+                label: 'põrandaküte',
+                sublabel: 'pealevool',
+                type: 1,
+                protocol: 'sonoff-floorheating-temps.DS18B20-2.Temperature',
+                options: { min: 18, max: 30, color: '#770099', unit: '°C' },
+            },
+            {
+                label: 'põrandaküte',
+                sublabel: 'tagasivool',
+                type: 1,
+                protocol: 'sonoff-floorheating-temps.DS18B20-1.Temperature',
+                options: { min: 18, max: 30, color: '#770099', unit: '°C' },
+            },
+            {
+                label: 'lisaküte',
+                sublabel: 'pealevool',
+                type: 1,
+                protocol: 'sonoff-floorheating-temps.DS18B20-4.Temperature',
+                options: { min: 18, max: 50, unit: '°C' },
+            },
+            {
+                label: 'lisaküte',
+                sublabel: 'tagasivool',
+                type: 1,
+                protocol: 'sonoff-floorheating-temps.DS18B20-3.Temperature',
+                options: { min: 18, max: 50, unit: '°C' },
+            },
         ];
         for (var index = 0; index < cards.length; index++) {
-            var card = new DefaultCard();
-            card.setHeader(cards[index]);
-            card.setProtocol(protocols[index]);
-            this.root.appendChild(card.getHTML());
+            switch (cards[index].type) {
+                case 1: {
+                    var card = new GaugeCard();
+                    card.setHeader(cards[index].label, cards[index].sublabel);
+                    card.setProtocol(cards[index].protocol);
+                    card.setOptions(cards[index].options.min, cards[index].options.max, cards[index].options.color, cards[index].options.unit);
+                    this.root.appendChild(card.getHTML());
+                }
+            }
         }
     };
     return DefaultView;
@@ -68,15 +280,21 @@ var Layout = (function () {
 var COM;
 var Communcator = (function () {
     function Communcator() {
+        this.receiver = null;
     }
     Communcator.prototype.in = function (msg) {
-        console.log('[COM]in:', msg);
-        if (msg.topic == "sesnorUpdate") {
+        if (msg.topic == "sensorUpdate") {
             this.toSensorEvent(msg);
         }
     };
     Communcator.prototype.out = function (msg) {
-        return;
+        if (!this.receiver) {
+            return;
+        }
+        this.receiver(msg);
+    };
+    Communcator.prototype.setReceiver = function (r) {
+        this.receiver = r;
     };
     Communcator.prototype.toSensorEvent = function (m) {
         var su = {
@@ -219,6 +437,9 @@ var Env = (function () {
     };
     Env.prototype.incoming = function (msg) {
         COM.in(msg);
+    };
+    Env.prototype.setReceiver = function (f) {
+        COM.setReceiver(f);
     };
     return Env;
 }());

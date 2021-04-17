@@ -1,9 +1,10 @@
 /// <reference path="../components/FillGauge.ts" />
-class DefaultCard implements ICard {
+class GaugeCard implements IGaugeCard {
 	private html: HTMLDivElement;
 	private content: FillGauge;
 	private header: HTMLElement;
-	private field: HTMLParagraphElement;
+	private subheader: HTMLElement;
+
 	private protocol: string;
 	constructor() {
 		this.init();
@@ -14,20 +15,22 @@ class DefaultCard implements ICard {
 	setProtocol(src: string): void {
 		this.protocol = src;
 	}
-	setHeader(txt: string): void {
-		this.header.innerHTML = txt;
+	setHeader(main: string, sub: string): void {
+		this.header.innerHTML = main;
+		this.subheader.innerHTML = sub;
 	}
-	setContent(txt: string): void {
-		this.field.innerHTML = txt;
+	setOptions(min: number, max: number, color?: string, unit?: string): void {
+		this.content.setOptions(min, max, color, unit);
 	}
 	private init(): void {
 		this.html = document.createElement('div');
 		this.html.className = 'card';
 		this.header = document.createElement('header');
+		this.subheader = document.createElement('header');
+		this.subheader.className = 'subheader';
 		this.html.appendChild(this.header);
+		this.html.appendChild(this.subheader);
 		this.content = new FillGauge(15, 100);
-		this.field = document.createElement('p');
-		this.html.appendChild(this.field);
 		this.html.appendChild(this.content.getHTML());
 
 		ClientEventDispacher.register(ClientEvents.SensorUpdate, this.onSensorUpdate, this);

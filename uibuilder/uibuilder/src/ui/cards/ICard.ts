@@ -1,6 +1,12 @@
 interface ICard {
 	getHTML(): HTMLDivElement;
-	setContent: (txt: string) => void;
-	setHeader: (txt: string) => void;
+	setHeader: (main: string, sub?: string, icon?: string) => void;
 	setProtocol: (src: string) => void;
+}
+interface IGaugeCard extends ICard {
+	setOptions: (min: number, max: number, color: string) => void;
+}
+const enum Cards {
+	DfaultCard,
+	GaugeCard,
 }
