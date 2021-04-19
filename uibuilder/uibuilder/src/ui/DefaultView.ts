@@ -1,6 +1,7 @@
 /// <reference path="cards/ICard.ts" />
 /// <reference path="cards/DefaultCard.ts" />
 /// <reference path="cards/GaugeCard.ts" />
+/// <reference path="cards/ControllerCard.ts" />
 
 class DefaultView implements IView {
 	private root: HTMLDivElement;
@@ -8,21 +9,14 @@ class DefaultView implements IView {
 		this.root = root;
 	}
 	build(): void {
-		/* var cards = ['saun', 'eesruum', 'vannituba', 'küte'];
-		var protocols = [
-			'sonoff-saun.DS18B20.Temperature',
-			'sonoff-saun.AM2301.Temperature',
-			'sonoff-th-wc.AM2301.Temperature',
-			'sonoff-floorheating-temps.DS18B20-1.Temperature',
-		]; */
-
-		var cards = [
+		var cards: any = [
 			{
 				label: 'saun',
 				sublabel: 'leiliruum',
 				type: Cards.GaugeCard,
 				protocol: 'sonoff-saun.DS18B20.Temperature',
 				options: {min: 15, max: 100, color: '#007800', unit: '°C'},
+				layout: false,
 			},
 			{
 				label: 'saun',
@@ -88,12 +82,25 @@ class DefaultView implements IView {
 				protocol: 'sonoff-floorheating-temps.DS18B20-3.Temperature',
 				options: {min: 18, max: 50, unit: '°C'},
 			},
+			{
+				label: 'Valgustus',
+				sublabel: 'Televiisori taustvalgus',
+				type: Cards.ControllerCard,
+				protocol: 'tvbacklight',
+			},
+			{
+				label: 'Võimendi',
+				sublabel: 'Puhkeruumi sound',
+				type: Cards.ControllerCard,
+				protocol: 'amplifier',
+			},
 		];
 
 		for (let index = 0; index < cards.length; index++) {
+			var card: ICard;
 			switch (cards[index].type) {
 				case Cards.GaugeCard: {
-					var card: ICard = new GaugeCard();
+					card = new GaugeCard();
 					card.setHeader(cards[index].label, cards[index].sublabel);
 					card.setProtocol(cards[index].protocol);
 					(card as GaugeCard).setOptions(
@@ -102,6 +109,18 @@ class DefaultView implements IView {
 						cards[index].options.color,
 						cards[index].options.unit
 					);
+					if (cards[index].layout) {
+						card.getHTML().style.gridColumn = cards[index].layout.column;
+						card.getHTML().style.gridRow = cards[index].layout.row;
+					}
+					this.root.appendChild(card.getHTML());
+					break;
+				}
+				case Cards.ControllerCard: {
+					card = new ControllerCard();
+					card.setHeader(cards[index].label, cards[index].sublabel);
+					card.setProtocol(cards[index].protocol);
+
 					this.root.appendChild(card.getHTML());
 				}
 			}

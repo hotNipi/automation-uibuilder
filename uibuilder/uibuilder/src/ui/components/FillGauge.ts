@@ -23,6 +23,20 @@ class FillGauge {
 		this.animation = -1;
 		this.init();
 	}
+	dispose(): void {
+		while (this.html.firstChild) {
+			this.html.removeChild(this.html.lastChild);
+		}
+		this.content = null;
+		this.content = null;
+		this.content = null;
+		this.fields = null;
+		this.field = null;
+		this.minfield = null;
+		this.maxfield = null;
+		this.unitfield = null;
+		this.html = null;
+	}
 	private init(): void {
 		this.html = document.createElement('div');
 		this.html.className = 'fillgauge';

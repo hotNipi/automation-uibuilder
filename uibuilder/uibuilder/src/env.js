@@ -1,4 +1,41 @@
 "use strict";
+var DefaultCard = (function () {
+    function DefaultCard() {
+        this.init();
+    }
+    DefaultCard.prototype.dispose = function () {
+        while (this.html.firstChild) {
+            this.html.removeChild(this.html.lastChild);
+        }
+        this.content = null;
+        this.header = null;
+        this.field = null;
+        this.html = null;
+    };
+    DefaultCard.prototype.getHTML = function () {
+        return this.html;
+    };
+    DefaultCard.prototype.setProtocol = function (src) {
+        this.protocol = src;
+    };
+    DefaultCard.prototype.setHeader = function (txt) {
+        this.header.innerHTML = txt;
+    };
+    DefaultCard.prototype.setContent = function (txt) {
+        this.field.innerHTML = txt;
+    };
+    DefaultCard.prototype.init = function () {
+        this.html = document.createElement('div');
+        this.html.className = 'card';
+        this.header = document.createElement('header');
+        this.html.appendChild(this.header);
+        this.content = document.createElement('div');
+        this.field = document.createElement('p');
+        this.html.appendChild(this.field);
+        this.html.appendChild(this.content);
+    };
+    return DefaultCard;
+}());
 var Calc = (function () {
     function Calc() {
     }
@@ -37,6 +74,20 @@ var FillGauge = (function () {
         this.animation = -1;
         this.init();
     }
+    FillGauge.prototype.dispose = function () {
+        while (this.html.firstChild) {
+            this.html.removeChild(this.html.lastChild);
+        }
+        this.content = null;
+        this.content = null;
+        this.content = null;
+        this.fields = null;
+        this.field = null;
+        this.minfield = null;
+        this.maxfield = null;
+        this.unitfield = null;
+        this.html = null;
+    };
     FillGauge.prototype.init = function () {
         this.html = document.createElement('div');
         this.html.className = 'fillgauge';
@@ -105,44 +156,20 @@ var FillGauge = (function () {
     };
     return FillGauge;
 }());
-var DefaultCard = (function () {
-    function DefaultCard() {
-        this.init();
-    }
-    DefaultCard.prototype.getHTML = function () {
-        return this.html;
-    };
-    DefaultCard.prototype.setProtocol = function (src) {
-        this.protocol = src;
-    };
-    DefaultCard.prototype.setHeader = function (txt) {
-        this.header.innerHTML = txt;
-    };
-    DefaultCard.prototype.setContent = function (txt) {
-        this.field.innerHTML = txt;
-    };
-    DefaultCard.prototype.init = function () {
-        this.html = document.createElement('div');
-        this.html.className = 'card';
-        this.header = document.createElement('header');
-        this.html.appendChild(this.header);
-        this.content = new FillGauge(15, 100);
-        this.field = document.createElement('p');
-        this.html.appendChild(this.field);
-        this.html.appendChild(this.content.getHTML());
-        ClientEventDispacher.register(0, this.onSensorUpdate, this);
-    };
-    DefaultCard.prototype.onSensorUpdate = function (msg) {
-        if (msg.protocol == this.protocol) {
-            this.content.update(msg.data);
-        }
-    };
-    return DefaultCard;
-}());
 var GaugeCard = (function () {
     function GaugeCard() {
         this.init();
     }
+    GaugeCard.prototype.dispose = function () {
+        ClientEventDispacher.unregister(0, this.onSensorUpdate, this);
+        this.content.dispose();
+        while (this.html.firstChild) {
+            this.html.removeChild(this.html.lastChild);
+        }
+        this.content = null;
+        this.header = null;
+        this.subheader = null;
+    };
     GaugeCard.prototype.getHTML = function () {
         return this.html;
     };
@@ -159,11 +186,13 @@ var GaugeCard = (function () {
     GaugeCard.prototype.init = function () {
         this.html = document.createElement('div');
         this.html.className = 'card';
+        this.head = document.createElement('div');
         this.header = document.createElement('header');
         this.subheader = document.createElement('header');
         this.subheader.className = 'subheader';
-        this.html.appendChild(this.header);
-        this.html.appendChild(this.subheader);
+        this.head.appendChild(this.header);
+        this.head.appendChild(this.subheader);
+        this.html.appendChild(this.head);
         this.content = new FillGauge(15, 100);
         this.html.appendChild(this.content.getHTML());
         ClientEventDispacher.register(0, this.onSensorUpdate, this);
@@ -174,6 +203,93 @@ var GaugeCard = (function () {
         }
     };
     return GaugeCard;
+}());
+var DeviceControls = (function () {
+    function DeviceControls() {
+        this.init();
+    }
+    DeviceControls.prototype.dispose = function () {
+        while (this.html.firstChild) {
+            this.html.removeChild(this.html.lastChild);
+        }
+        this.powerButton = null;
+        this.autoButton = null;
+        this.html = null;
+    };
+    DeviceControls.prototype.getHtml = function () {
+        return this.html;
+    };
+    DeviceControls.prototype.setProtocol = function (p) {
+        console.log('setproto', p);
+        this.protocol = p;
+        ClientEventDispacher.register(1, this.onDeviceUpdate, this);
+    };
+    DeviceControls.prototype.init = function () {
+        this.html = document.createElement('div');
+        this.html.className = 'devicecontrols';
+        this.powerButton = document.createElement('div');
+        this.powerButton.className = 'button ripple';
+        this.autoButton = document.createElement('div');
+        this.autoButton.className = 'button ripple';
+        this.autoButton.onclick = this.onAutoClick.bind(this);
+        this.powerButton.onclick = this.onPowerClick.bind(this);
+        this.html.appendChild(this.powerButton);
+        this.html.appendChild(this.autoButton);
+        this.powerButton.innerHTML = "ON";
+        this.autoButton.innerHTML = "AUTO";
+    };
+    DeviceControls.prototype.onDeviceUpdate = function (msg) {
+        if (msg.protocol == this.protocol) {
+            this.powerButton.innerHTML = msg.state;
+            this.autoButton.innerHTML =
+                msg.auto == true ? "AUTO" : "MANUAL";
+        }
+    };
+    DeviceControls.prototype.onAutoClick = function () {
+        COM.out({ topic: "deviceUpdate", protocol: this.protocol, payload: 'auto' });
+    };
+    DeviceControls.prototype.onPowerClick = function () {
+        COM.out({ topic: "deviceUpdate", protocol: this.protocol, payload: 'power' });
+    };
+    return DeviceControls;
+}());
+var ControllerCard = (function () {
+    function ControllerCard() {
+        this.init();
+    }
+    ControllerCard.prototype.dispose = function () {
+        while (this.html.firstChild) {
+            this.html.removeChild(this.html.lastChild);
+        }
+        this.content = null;
+        this.header = null;
+        this.field = null;
+        this.html = null;
+    };
+    ControllerCard.prototype.getHTML = function () {
+        return this.html;
+    };
+    ControllerCard.prototype.setProtocol = function (src) {
+        this.content.setProtocol(src);
+    };
+    ControllerCard.prototype.setHeader = function (main, sub) {
+        this.header.innerHTML = main;
+        this.subheader.innerHTML = sub;
+    };
+    ControllerCard.prototype.init = function () {
+        this.html = document.createElement('div');
+        this.html.className = 'card';
+        this.head = document.createElement('div');
+        this.header = document.createElement('header');
+        this.subheader = document.createElement('header');
+        this.subheader.className = 'subheader';
+        this.head.appendChild(this.header);
+        this.head.appendChild(this.subheader);
+        this.html.appendChild(this.head);
+        this.content = new DeviceControls();
+        this.html.appendChild(this.content.getHtml());
+    };
+    return ControllerCard;
 }());
 var DefaultView = (function () {
     function DefaultView(root) {
@@ -187,6 +303,7 @@ var DefaultView = (function () {
                 type: 1,
                 protocol: 'sonoff-saun.DS18B20.Temperature',
                 options: { min: 15, max: 100, color: '#007800', unit: '°C' },
+                layout: false,
             },
             {
                 label: 'saun',
@@ -251,14 +368,38 @@ var DefaultView = (function () {
                 protocol: 'sonoff-floorheating-temps.DS18B20-3.Temperature',
                 options: { min: 18, max: 50, unit: '°C' },
             },
+            {
+                label: 'Valgustus',
+                sublabel: 'Televiisori taustvalgus',
+                type: 2,
+                protocol: 'tvbacklight',
+            },
+            {
+                label: 'Võimendi',
+                sublabel: 'Puhkeruumi sound',
+                type: 2,
+                protocol: 'amplifier',
+            },
         ];
         for (var index = 0; index < cards.length; index++) {
+            var card;
             switch (cards[index].type) {
                 case 1: {
-                    var card = new GaugeCard();
+                    card = new GaugeCard();
                     card.setHeader(cards[index].label, cards[index].sublabel);
                     card.setProtocol(cards[index].protocol);
                     card.setOptions(cards[index].options.min, cards[index].options.max, cards[index].options.color, cards[index].options.unit);
+                    if (cards[index].layout) {
+                        card.getHTML().style.gridColumn = cards[index].layout.column;
+                        card.getHTML().style.gridRow = cards[index].layout.row;
+                    }
+                    this.root.appendChild(card.getHTML());
+                    break;
+                }
+                case 2: {
+                    card = new ControllerCard();
+                    card.setHeader(cards[index].label, cards[index].sublabel);
+                    card.setProtocol(cards[index].protocol);
                     this.root.appendChild(card.getHTML());
                 }
             }
@@ -286,9 +427,15 @@ var Communcator = (function () {
         if (msg.topic == "sensorUpdate") {
             this.toSensorEvent(msg);
         }
+        if (msg.topic == "deviceUpdate") {
+            console.log('[COM]in:', msg);
+            this.toDeviceEvent(msg);
+        }
     };
     Communcator.prototype.out = function (msg) {
+        console.log('[COM]out', msg);
         if (!this.receiver) {
+            console.log('NO RECEIVER');
             return;
         }
         this.receiver(msg);
@@ -297,12 +444,22 @@ var Communcator = (function () {
         this.receiver = r;
     };
     Communcator.prototype.toSensorEvent = function (m) {
-        var su = {
+        var u = {
             type: 0,
             protocol: m.protocol,
             data: m.payload,
         };
-        ClientEventDispacher.dispatch(su);
+        ClientEventDispacher.dispatch(u);
+    };
+    Communcator.prototype.toDeviceEvent = function (m) {
+        console.log(m);
+        var u = {
+            type: 1,
+            protocol: m.protocol,
+            state: m.payload.state,
+            auto: m.payload.auto,
+        };
+        ClientEventDispacher.dispatch(u);
     };
     return Communcator;
 }());

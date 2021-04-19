@@ -11,13 +11,18 @@ class Communcator implements COM {
 		this.receiver = null;
 	}
 	in(msg: any): void {
-		//console.log('[COM]in:', msg);
 		if (msg.topic == NodeRedMessage.SensorUpdate) {
 			this.toSensorEvent(msg);
 		}
+		if (msg.topic == NodeRedMessage.DeviceUpdate) {
+			console.log('[COM]in:', msg);
+			this.toDeviceEvent(msg);
+		}
 	}
 	out(msg: any): void {
+		console.log('[COM]out', msg);
 		if (!this.receiver) {
+			console.log('NO RECEIVER');
 			return;
 		}
 		this.receiver(msg);
@@ -27,11 +32,21 @@ class Communcator implements COM {
 	}
 
 	private toSensorEvent(m: any): void {
-		var su: SensorUpdate = {
+		var u: SensorUpdate = {
 			type: ClientEvents.SensorUpdate,
 			protocol: m.protocol,
 			data: m.payload,
 		};
-		ClientEventDispacher.dispatch(su);
+		ClientEventDispacher.dispatch(u);
+	}
+	private toDeviceEvent(m: any): void {
+		console.log(m);
+		var u: DeviceUpdate = {
+			type: ClientEvents.DeviceUpdate,
+			protocol: m.protocol,
+			state: m.payload.state,
+			auto: m.payload.auto,
+		};
+		ClientEventDispacher.dispatch(u);
 	}
 }

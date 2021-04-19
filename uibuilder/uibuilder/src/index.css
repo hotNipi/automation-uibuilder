@@ -1,5 +1,9 @@
 :root {
 	--lightText: #f5f5dc;
+	--brown-shadow: hsl(22, 97%, 14%);
+	--brown-0: hsl(16, 26%, 50%);
+	--brown-10: hsl(16, 26%, 65%);
+	--brown-20: hsl(16, 26%, 80%);
 }
 p {
 	margin: 0;
@@ -12,7 +16,8 @@ body {
 }
 .main {
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+	grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+	grid-auto-flow: dense;
 	gap: 0.4em;
 	margin: 0.4em;
 }
@@ -21,6 +26,8 @@ body {
 	min-height: 20px;
 	border: 1px solid #f5f5dc50;
 	border-radius: 0.25em;
+	display: grid;
+	grid-template-rows: 1fr 3fr;
 }
 .card header {
 	font-size: 1em;
@@ -35,7 +42,6 @@ body {
 }
 .fillgauge {
 	position: relative;
-	height: 5em;
 }
 .fillgauge .bar {
 	position: absolute;
@@ -90,4 +96,39 @@ body {
 }
 .fillgauge .minmax.max {
 	top: 0;
+}
+.devicecontrols {
+	margin: auto;
+}
+
+.devicecontrols .button {
+	display: inline-block;
+}
+.ripple {
+	background-position: center;
+	transition: background 0.8s;
+}
+.ripple:hover {
+	background: var(--brown-10) radial-gradient(circle, transparent 1%, var(--brown-10) 1%)
+		center/15000%;
+}
+.ripple:active {
+	background-color: var(--brown-20);
+	background-size: 100%;
+	transition: background 0s;
+}
+
+.button {
+	border: none;
+	border-radius: 100em;
+	text-align: center;
+	padding: 0.6em;
+	margin: 0.2em;
+	min-width: 4em;
+	text-transform: uppercase;
+	cursor: pointer;
+	color: var(--lightText);
+	background-color: var(--brown-0);
+	box-shadow: 6px -6px 12px 1px var(--brown-shadow);
+	outline: none;
 }

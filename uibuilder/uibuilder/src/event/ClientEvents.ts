@@ -1,13 +1,16 @@
 /// <reference path="../protocol/Sensor.ts" />
 const enum ClientEvents {
 	SensorUpdate,
-	ClientUpdate,
+	DeviceUpdate,
 }
 interface SensorUpdate {
 	type: ClientEvents.SensorUpdate;
 	protocol: string;
 	data: number;
 }
-interface ClientUpdate {
-	type: ClientEvents.ClientUpdate;
+interface DeviceUpdate {
+	type: ClientEvents.DeviceUpdate;
+	protocol: string;
+	state: string;
+	auto: boolean;
 }
