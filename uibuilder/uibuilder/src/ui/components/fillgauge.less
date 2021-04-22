@@ -1,0 +1,68 @@
+.fillgauge {
+	position: relative;
+}
+.fillgauge .bar {
+	position: absolute;
+	height: 0;
+	background: red;
+	left: 0%;
+	right: 0%;
+	bottom: 0%;
+	transition: all 2s ease-in-out;
+	z-index: 5;
+	opacity: 1;
+	box-shadow: 0px -6px 6px 0 #1b1b1b2b;
+}
+.card.large .fillgauge .bar {
+	left: 35%;
+}
+.card.large .fillgauge .value {
+	font-size: 4rem;
+	margin-left: 35%;
+}
+.card.large .fillgauge .unit {
+	font-size: 2rem;
+}
+.fillgauge .value {
+	position: relative;
+	color: var(--lightText);
+	text-align: center;
+	font-size: 2rem;
+	text-shadow: 0 0 4px var(--d9);
+	z-index: 10;
+	top: 50%;
+	transform: translateY(-50%);
+}
+.fillgauge .unit {
+	font-size: 1rem;
+	padding-left: 0.25em;
+	vertical-align: super;
+}
+.fillgauge:after {
+	content: '';
+	width: 0.5em;
+	position: absolute;
+	bottom: 2px;
+	top: 2px;
+	right: 1px;
+	z-index: 15;
+	opacity: 0.6;
+	background-image: linear-gradient(var(--lightText) 33%, rgba(255, 255, 255, 0) 0%);
+	background-position: right;
+	background-size: 0.5em 0.25em;
+	background-repeat: repeat-y;
+}
+.fillgauge .minmax {
+	color: var(--lightText);
+	position: absolute;
+	font-size: 0.7rem;
+	right: 1.2em;
+	text-align: right;
+	z-index: 20;
+}
+.fillgauge .minmax.min {
+	bottom: 0;
+}
+.fillgauge .minmax.max {
+	top: 0;
+}

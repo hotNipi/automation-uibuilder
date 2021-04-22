@@ -1,0 +1,55 @@
+.card {
+	position: relative;
+	background: var(--d2);
+	min-height: 20px;
+	display: grid;
+	grid-template-rows: 1fr 3fr;
+	transition: all 1s ease-in-out;
+	filter: drop-shadow(0px 0px 4px var(--btn-shadow));
+}
+.card .img {
+	position: absolute;
+	background-size: cover;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	right: 65%;
+	opacity: 0.5;
+	display: none;
+}
+.card.large .img {
+	right: 65%;
+	opacity: 1;
+	display: block;
+}
+
+.card.large {
+	grid-column: span 2;
+	grid-row: span 2;
+}
+.card .cardhead {
+	position: relative;
+	background-color: var(--d5);
+	filter: drop-shadow(0px 2px 2px var(--btn-shadow));
+	cursor: pointer;
+}
+.card header {
+	font-size: 1em;
+	color: var(--lightText);
+	text-transform: uppercase;
+	padding-left: 0.4em;
+	white-space: nowrap;
+}
+.card header.subheader {
+	font-size: 0.65em;
+	padding-left: 0.6em;
+	position: relative;
+	top: -2px;
+	opacity: 0.5;
+}
+.card.large header {
+	font-size: 2em;
+}
+.card.large .subheader {
+	font-size: 1.1em;
+}

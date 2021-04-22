@@ -5,7 +5,7 @@ interface ICard {
 	dispose: () => void;
 }
 interface IGaugeCard extends ICard {
-	setOptions: (min: number, max: number, color: string) => void;
+	setOptions: (min: number, max: number, color: string, unit?: string, image?: string) => void;
 }
 interface IControllerCard extends ICard {}
 const enum Cards {

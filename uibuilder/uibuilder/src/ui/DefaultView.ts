@@ -1,5 +1,5 @@
 /// <reference path="cards/ICard.ts" />
-/// <reference path="cards/DefaultCard.ts" />
+/// <reference path="cards/BaseCard.ts"/>
 /// <reference path="cards/GaugeCard.ts" />
 /// <reference path="cards/ControllerCard.ts" />
 
@@ -15,16 +15,10 @@ class DefaultView implements IView {
 				sublabel: 'leiliruum',
 				type: Cards.GaugeCard,
 				protocol: 'sonoff-saun.DS18B20.Temperature',
-				options: {min: 15, max: 100, color: '#007800', unit: '°C'},
+				options: {min: 15, max: 100, color: '#007800', unit: '°C', image: 'images/saun.jpg'},
 				layout: false,
 			},
-			{
-				label: 'saun',
-				sublabel: 'puhkeruum',
-				type: Cards.GaugeCard,
-				protocol: 'sonoff-saun.AM2301.Temperature',
-				options: {min: 15, max: 30, color: '#007800', unit: '°C'},
-			},
+
 			{
 				label: 'saun',
 				sublabel: 'eesruum',
@@ -83,7 +77,7 @@ class DefaultView implements IView {
 				options: {min: 18, max: 50, unit: '°C'},
 			},
 			{
-				label: 'Valgustus',
+				label: 'Taustvalgus',
 				sublabel: 'Televiisori taustvalgus',
 				type: Cards.ControllerCard,
 				protocol: 'tvbacklight',
@@ -93,6 +87,36 @@ class DefaultView implements IView {
 				sublabel: 'Puhkeruumi sound',
 				type: Cards.ControllerCard,
 				protocol: 'amplifier',
+			},
+			{
+				label: 'Mini ventilaatorid',
+				sublabel: 'Puhkeruumi õhuringlus',
+				type: Cards.ControllerCard,
+				protocol: 'minivent',
+			},
+			{
+				label: 'Ventilaator',
+				sublabel: 'Väljatõmbe ventilaator',
+				type: Cards.ControllerCard,
+				protocol: 'vent',
+			},
+			{
+				label: 'Köögi töövalgus',
+				sublabel: 'Tööpinna valgusti',
+				type: Cards.ControllerCard,
+				protocol: 'kitchenworklight',
+			},
+			{
+				label: 'Köögi õhtuvalgus',
+				sublabel: 'Meeleolu valgustid',
+				type: Cards.ControllerCard,
+				protocol: 'kitchentoplight',
+			},
+			{
+				label: 'Voodi õhtuvalgus',
+				sublabel: 'Meeleolu valgustid',
+				type: Cards.ControllerCard,
+				protocol: 'bedunderlight',
 			},
 		];
 
@@ -107,7 +131,8 @@ class DefaultView implements IView {
 						cards[index].options.min,
 						cards[index].options.max,
 						cards[index].options.color,
-						cards[index].options.unit
+						cards[index].options.unit,
+						cards[index].options.image
 					);
 					if (cards[index].layout) {
 						card.getHTML().style.gridColumn = cards[index].layout.column;

@@ -9,6 +9,7 @@ class DeviceControls {
 	private powerButton: HTMLDivElement;
 	private autoButton: HTMLDivElement;
 	private protocol: string;
+	private large: boolean;
 
 	constructor() {
 		this.init();
@@ -25,7 +26,6 @@ class DeviceControls {
 		return this.html;
 	}
 	setProtocol(p: string): void {
-		console.log('setproto', p);
 		this.protocol = p;
 		ClientEventDispacher.register(ClientEvents.DeviceUpdate, this.onDeviceUpdate, this);
 	}
@@ -37,6 +37,8 @@ class DeviceControls {
 		this.autoButton = document.createElement('div');
 		this.autoButton.className = 'button ripple';
 
+		this.autoButton.classList.add('hidden');
+
 		this.autoButton.onclick = this.onAutoClick.bind(this);
 		this.powerButton.onclick = this.onPowerClick.bind(this);
 		this.html.appendChild(this.powerButton);
@@ -47,9 +49,19 @@ class DeviceControls {
 	}
 	private onDeviceUpdate(msg: DeviceUpdate): void {
 		if (msg.protocol == this.protocol) {
+			console.log('onDeviceUpdate', msg);
 			this.powerButton.innerHTML = msg.state;
+			this.powerButton.classList.remove('on', 'off');
+			this.powerButton.classList.add(msg.state.toLowerCase());
+
 			this.autoButton.innerHTML =
 				msg.auto == true ? ButtonLabelState.AUTO : ButtonLabelState.MANUAL;
+			this.autoButton.classList.add(this.autoButton.innerHTML.toLowerCase());
+			if (this.large) {
+				this.autoButton.classList.remove('hidden');
+			} else {
+				this.autoButton.classList.add('hidden');
+			}
 		}
 	}
 	private onAutoClick(): void {
@@ -57,5 +69,13 @@ class DeviceControls {
 	}
 	private onPowerClick(): void {
 		COM.out({topic: NodeRedMessage.DeviceUpdate, protocol: this.protocol, payload: 'power'});
+	}
+	public resize(large: boolean): void {
+		this.large = large;
+		if (large) {
+			this.autoButton.classList.remove('hidden');
+		} else {
+			this.autoButton.classList.add('hidden');
+		}
 	}
 }

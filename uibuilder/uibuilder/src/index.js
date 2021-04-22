@@ -7,10 +7,11 @@ window.onload = function() {
     env.layout(document.getElementById('main'))
 
     // Listen for incoming messages from Node-RED
+    env.setReceiver(uibuilder.send.bind(this))
+    //uibuilder.send( { 'topic': 'from-the-front', 'payload': 42 } )
+
     uibuilder.onChange('msg', function(msg){
         env.incoming(msg)
     })
-    env.setReceiver(uibuilder.send.bind(this))
-    //uibuilder.send( { 'topic': 'from-the-front', 'payload': 42 } )
     
 }

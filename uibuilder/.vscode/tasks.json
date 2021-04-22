@@ -18,10 +18,18 @@
 				"$tsc-watch"
 			],
 			"group": {
-				"kind": "build",
-				"isDefault": true
-			},
-			"label": "tsc: watch - uibuilder/src/tsconfig.json"
+                "kind": "build",
+                "isDefault": true
+            },
+			"label": "tsc: watch - uibuilder/src/tsconfig.json",
+			"dependsOn":["Less Compile"]
+		},
+		{
+			"label": "Less Compile",
+			"type": "shell",
+			"command": "lessc uibuilder/src/index.less uibuilder/src/index.css",
+			"group": "build",
+			"problemMatcher": []
 		}
 	]
 }

@@ -1,15 +1,16 @@
 /// <reference path="../components/FillGauge.ts" />
-class GaugeCard implements IGaugeCard {
-	private html: HTMLDivElement;
+
+class GaugeCard extends BaseCard implements IGaugeCard {
 	private content: FillGauge;
 	private header: HTMLElement;
-	private head: HTMLDivElement;
+
+	private image: HTMLDivElement;
+
 	private subheader: HTMLElement;
+	private size: HTMLDivElement;
 
 	private protocol: string;
-	constructor() {
-		this.init();
-	}
+
 	dispose(): void {
 		ClientEventDispacher.unregister(ClientEvents.SensorUpdate, this.onSensorUpdate, this);
 		this.content.dispose();
@@ -30,13 +31,19 @@ class GaugeCard implements IGaugeCard {
 		this.header.innerHTML = main;
 		this.subheader.innerHTML = sub;
 	}
-	setOptions(min: number, max: number, color?: string, unit?: string): void {
+	setOptions(min: number, max: number, color?: string, unit?: string, image?: string): void {
 		this.content.setOptions(min, max, color, unit);
+		if (image) {
+			console.log('image', image);
+			this.image.style.backgroundImage = 'url(' + image + ')';
+		}
 	}
-	private init(): void {
-		this.html = document.createElement('div');
-		this.html.className = 'card';
-		this.head = document.createElement('div');
+	protected init(): void {
+		super.init();
+		this.image = document.createElement('div');
+		this.image.className = 'img';
+		this.html.appendChild(this.image);
+
 		this.header = document.createElement('header');
 		this.subheader = document.createElement('header');
 		this.subheader.className = 'subheader';
@@ -45,7 +52,6 @@ class GaugeCard implements IGaugeCard {
 		this.html.appendChild(this.head);
 		this.content = new FillGauge(15, 100);
 		this.html.appendChild(this.content.getHTML());
-
 		ClientEventDispacher.register(ClientEvents.SensorUpdate, this.onSensorUpdate, this);
 	}
 	private onSensorUpdate(msg: SensorUpdate): void {

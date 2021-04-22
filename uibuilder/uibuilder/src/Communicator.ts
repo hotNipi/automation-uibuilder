@@ -40,7 +40,6 @@ class Communcator implements COM {
 		ClientEventDispacher.dispatch(u);
 	}
 	private toDeviceEvent(m: any): void {
-		console.log(m);
 		var u: DeviceUpdate = {
 			type: ClientEvents.DeviceUpdate,
 			protocol: m.protocol,

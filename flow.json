@@ -21,6 +21,13 @@
         "info": ""
     },
     {
+        "id": "e9c32823.c6a048",
+        "type": "tab",
+        "label": "Flow 4",
+        "disabled": false,
+        "info": ""
+    },
+    {
         "id": "1cdc2a24.b3be46",
         "type": "mqtt-broker",
         "name": "kelder",
@@ -494,7 +501,7 @@
         "type": "function",
         "z": "f56ccabd.7567e8",
         "name": "convert to message",
-        "func": "function updateClient(name){\n    let client = global.get(name)\n    if(client && client.controller){\n        if(client.controller.prop == msg.command){\n            let controller = global.get(client.controller.name)\n            if(client.state != controller.states[client.controller.prop]){\n                client.state = controller.states[client.controller.prop]\n                global.set(client.name,client)\n               \n                node.send({topic:\"deviceUpdate\", protocol:client.name, payload:{state:client.state,auto:client.auto}})\n            }\n        }\n    }\n}\n\nfunction checkClientState(name){\n    let client = global.get(name)\n    if(client){\n        if(client.desiredstate != \"INIT\" && client.desiredstate != client.state){\n            node.send({topic:\"stateMismatchUpdate\", source:client.name, payload:client.desiredstate})\n        }\n    }\n}\n\nfunction sendSensors(c){\n    let controller = global.get(c)\n    if(controller && controller.sensors){\n        Object.keys(controller.sensors).forEach(sensor => {\n            Object.keys(controller.sensors[sensor]).forEach(prop => {\n                if(prop != \"name\" && prop != \"lastupdate\"){\n                    var p = [c,sensor,prop]\n                    node.send({topic:\"sensorUpdate\",protocol:p.join('.'),payload:controller.sensors[sensor][prop],timestamp:controller.sensors[sensor].lastupdate})\n                }\n            })\n        })\n    }\n}\n\nswitch(msg.command){\n    case \"SENSOR\":{\n        sendSensors(msg.target)\n        break\n    }\n    case \"POWER\":\n    case \"POWER1\":\n    case \"POWER2\":\n    case \"RESULT\":{\n        msg.payload.forEach(client => updateClient(client))\n        break;\n    }\n    case \"STATE\": {\n        msg.payload.forEach(client => checkClientState(client))\n        break;\n    }\n    case \"LWT\":{\n        node.send({topic:\"controllerUpdate\",source:msg.target, payload:global.get(msg.target).connection.status})\n        break\n    }\n}",
+        "func": "function updateClient(name,force){\n    let client = global.get(name)\n    if(client && client.controller){\n        if(client.controller.prop == msg.command || force){\n            let controller = global.get(client.controller.name)\n            if(client.state != controller.states[client.controller.prop]){\n                client.state = controller.states[client.controller.prop]\n                if(force){\n                    client.desiredstate = client.state\n                }\n                global.set(client.name,client)\n               \n                node.send({topic:\"deviceUpdate\", protocol:client.name, payload:{state:client.state,auto:client.auto}})\n            }\n        }\n    }\n}\n\nfunction checkClientState(name){\n    let client = global.get(name)\n    if(client){\n        if(client.desiredstate != \"INIT\" && client.desiredstate != client.state){\n            node.send({topic:\"stateMismatchUpdate\", source:client.name, payload:client.desiredstate})\n        }\n        else{\n            updateClient(name,true)\n        }\n    }\n}\n\nfunction sendSensors(c){\n    let controller = global.get(c)\n    if(controller && controller.sensors){\n        Object.keys(controller.sensors).forEach(sensor => {\n            Object.keys(controller.sensors[sensor]).forEach(prop => {\n                if(prop != \"name\" && prop != \"lastupdate\"){\n                    var p = [c,sensor,prop]\n                    node.send({topic:\"sensorUpdate\",protocol:p.join('.'),payload:controller.sensors[sensor][prop],timestamp:controller.sensors[sensor].lastupdate})\n                }\n            })\n        })\n    }\n}\n\nswitch(msg.command){\n    case \"SENSOR\":{\n        sendSensors(msg.target)\n        break\n    }\n    case \"POWER\":\n    case \"POWER1\":\n    case \"POWER2\":\n    case \"RESULT\":{\n        msg.payload.forEach(client => updateClient(client))\n        break;\n    }\n    case \"STATE\": {\n        node.warn(msg)\n        msg.payload.forEach(client => checkClientState(client))\n        break;\n    }\n    case \"LWT\":{\n        node.send({topic:\"controllerUpdate\",source:msg.target, payload:global.get(msg.target).connection.status})\n        break\n    }\n}",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
@@ -654,7 +661,7 @@
         "retain": "false",
         "broker": "1cdc2a24.b3be46",
         "x": 530,
-        "y": 460,
+        "y": 440,
         "wires": []
     },
     {
@@ -692,6 +699,7 @@
         "noerr": 0,
         "initialize": "",
         "finalize": "",
+        "libs": [],
         "x": 810,
         "y": 260,
         "wires": [
@@ -918,7 +926,8 @@
                 "fdd787bc.ed3ee8"
             ],
             [
-                "38d1dfd4.1cf65"
+                "38d1dfd4.1cf65",
+                "ed753c5b.03f8"
             ]
         ]
     },
@@ -1133,8 +1142,8 @@
         "links": [
             "7bb9ea7f.8aec24"
         ],
-        "x": 495,
-        "y": 520,
+        "x": 535,
+        "y": 500,
         "wires": []
     },
     {
@@ -1166,6 +1175,349 @@
         ],
         "x": 535,
         "y": 580,
+        "wires": []
+    },
+    {
+        "id": "ed753c5b.03f8",
+        "type": "debug",
+        "z": "f56ccabd.7567e8",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 390,
+        "y": 540,
+        "wires": []
+    },
+    {
+        "id": "deebffa.c90a8",
+        "type": "ui_multistate_switch",
+        "z": "63163740.2d4508",
+        "name": "",
+        "group": "19f5ed07.08a453",
+        "order": 1,
+        "width": "3",
+        "height": "1",
+        "label": "",
+        "stateField": "payload",
+        "enableField": "enable",
+        "rounded": true,
+        "useThemeColors": false,
+        "hideSelectedLabel": false,
+        "multilineLabel": false,
+        "options": [
+            {
+                "label": "Option 2",
+                "value": "option_2",
+                "valueType": "str",
+                "color": "#ff6666"
+            },
+            {
+                "label": "Option 1",
+                "value": "option_1",
+                "valueType": "str",
+                "color": "#999999"
+            }
+        ],
+        "x": 360,
+        "y": 380,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "5bcabfad.b50f",
+        "type": "ui_multistate_switch",
+        "z": "63163740.2d4508",
+        "name": "",
+        "group": "19f5ed07.08a453",
+        "order": 1,
+        "width": "3",
+        "height": "1",
+        "label": "",
+        "stateField": "payload",
+        "enableField": "enable",
+        "rounded": true,
+        "useThemeColors": true,
+        "hideSelectedLabel": false,
+        "options": [
+            {
+                "label": "0",
+                "value": "option_0",
+                "valueType": "str",
+                "color": "#009933"
+            },
+            {
+                "label": "-",
+                "value": "option_1",
+                "valueType": "str",
+                "color": "#999999"
+            },
+            {
+                "label": "1",
+                "value": "option_2",
+                "valueType": "str",
+                "color": "#ff6666"
+            },
+            {
+                "label": "-",
+                "value": "option_3",
+                "valueType": "str",
+                "color": "#009999"
+            },
+            {
+                "label": "2",
+                "value": "option_4",
+                "valueType": "str",
+                "color": "#cccc00"
+            },
+            {
+                "label": "-",
+                "value": "option_5",
+                "valueType": "str",
+                "color": "#ff33cc"
+            },
+            {
+                "label": "3",
+                "value": "option_6",
+                "valueType": "str",
+                "color": "#cc6600"
+            },
+            {
+                "label": "-",
+                "value": "option_7",
+                "valueType": "str",
+                "color": "#99ff66"
+            },
+            {
+                "label": "4",
+                "value": "option_8",
+                "valueType": "str",
+                "color": "#660033"
+            },
+            {
+                "label": "-",
+                "value": "option_9",
+                "valueType": "str",
+                "color": "#ff6666"
+            },
+            {
+                "label": "5",
+                "value": "option_10",
+                "valueType": "str",
+                "color": "#009999"
+            },
+            {
+                "label": "-",
+                "value": "option_11",
+                "valueType": "str",
+                "color": "#009999"
+            },
+            {
+                "label": "6",
+                "value": "option_12",
+                "valueType": "str",
+                "color": "#cc6600"
+            }
+        ],
+        "x": 360,
+        "y": 420,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "79ebafb2.5c1d7",
+        "type": "ui_multistate_switch",
+        "z": "63163740.2d4508",
+        "name": "",
+        "group": "19f5ed07.08a453",
+        "order": 1,
+        "width": "4",
+        "height": "2",
+        "label": "do it properly so it works",
+        "stateField": "payload",
+        "enableField": "enable",
+        "rounded": true,
+        "useThemeColors": true,
+        "hideSelectedLabel": false,
+        "multilineLabel": true,
+        "options": [
+            {
+                "label": "0",
+                "value": "option_0",
+                "valueType": "str",
+                "color": "#009933"
+            },
+            {
+                "label": "-",
+                "value": "option_1",
+                "valueType": "str",
+                "color": "#999999"
+            },
+            {
+                "label": "1",
+                "value": "option_2",
+                "valueType": "str",
+                "color": "#ff6666"
+            },
+            {
+                "label": "-",
+                "value": "option_3",
+                "valueType": "str",
+                "color": "#009999"
+            },
+            {
+                "label": "2",
+                "value": "option_4",
+                "valueType": "str",
+                "color": "#cccc00"
+            }
+        ],
+        "x": 390,
+        "y": 460,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "87a678f0.c6d828",
+        "type": "ui_multistate_switch",
+        "z": "63163740.2d4508",
+        "name": "",
+        "group": "19f5ed07.08a453",
+        "order": 1,
+        "width": "6",
+        "height": "2",
+        "label": "do it properly so it works",
+        "stateField": "payload",
+        "enableField": "enable",
+        "rounded": true,
+        "useThemeColors": true,
+        "hideSelectedLabel": false,
+        "multilineLabel": true,
+        "options": [
+            {
+                "label": "00",
+                "value": "option_0",
+                "valueType": "str",
+                "color": "#009933"
+            },
+            {
+                "label": "aa",
+                "value": "option_1",
+                "valueType": "str",
+                "color": "#999999"
+            },
+            {
+                "label": "bbb",
+                "value": "option_2",
+                "valueType": "str",
+                "color": "#ff6666"
+            },
+            {
+                "label": "cc",
+                "value": "option_3",
+                "valueType": "str",
+                "color": "#009999"
+            },
+            {
+                "label": "ddd",
+                "value": "option_4",
+                "valueType": "str",
+                "color": "#cccc00"
+            }
+        ],
+        "x": 390,
+        "y": 500,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "6790d2bd.70a6cc",
+        "type": "debug",
+        "z": "f56ccabd.7567e8",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 920,
+        "y": 440,
+        "wires": []
+    },
+    {
+        "id": "2f47f00c.b8042",
+        "type": "inject",
+        "z": "e9c32823.c6a048",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 330,
+        "y": 260,
+        "wires": [
+            [
+                "94b8caa4.e42ab8"
+            ]
+        ]
+    },
+    {
+        "id": "94b8caa4.e42ab8",
+        "type": "function",
+        "z": "e9c32823.c6a048",
+        "name": "",
+        "func": "var testtable = [];\ntesttable[0] = 32455.6;\ntesttable[20] = 31399.6;\ntesttable[40] = 31299.5;\n\ntesttable[359] = 30100.0;\n                 588069.7\n\nvar sum = testtable.reduce((a, b) => a + b, 0)\n\nmsg.payload = sum;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 600,
+        "y": 260,
+        "wires": [
+            [
+                "eda574ac.c68238"
+            ]
+        ]
+    },
+    {
+        "id": "eda574ac.c68238",
+        "type": "debug",
+        "z": "e9c32823.c6a048",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 930,
+        "y": 260,
         "wires": []
     }
 ]

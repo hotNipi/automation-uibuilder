@@ -1,15 +1,12 @@
 /// <reference path="../components/DeviceControls.ts" />
-class ControllerCard implements ICard {
-	private html: HTMLDivElement;
+class ControllerCard extends BaseCard implements ICard {
 	private content: DeviceControls;
 	private header: HTMLElement;
-	private head: HTMLDivElement;
+
 	private subheader: HTMLElement;
 	private field: HTMLParagraphElement;
 	private protocol: string;
-	constructor() {
-		this.init();
-	}
+
 	dispose(): void {
 		while (this.html.firstChild) {
 			this.html.removeChild(this.html.lastChild);
@@ -19,9 +16,7 @@ class ControllerCard implements ICard {
 		this.field = null;
 		this.html = null;
 	}
-	getHTML(): HTMLDivElement {
-		return this.html;
-	}
+
 	setProtocol(src: string): void {
 		this.content.setProtocol(src);
 	}
@@ -30,11 +25,10 @@ class ControllerCard implements ICard {
 		this.subheader.innerHTML = sub;
 	}
 
-	private init(): void {
-		this.html = document.createElement('div');
-		this.html.className = 'card';
-		this.head = document.createElement('div');
+	protected init(): void {
+		super.init();
 		this.header = document.createElement('header');
+
 		this.subheader = document.createElement('header');
 		this.subheader.className = 'subheader';
 		this.head.appendChild(this.header);
@@ -43,5 +37,9 @@ class ControllerCard implements ICard {
 		this.content = new DeviceControls();
 
 		this.html.appendChild(this.content.getHtml());
+	}
+	protected resize(): void {
+		super.resize();
+		this.content.resize(this.large);
 	}
 }
