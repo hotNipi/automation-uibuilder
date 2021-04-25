@@ -3,21 +3,27 @@ const enum ButtonLabelState {
 	OFF = 'OFF',
 	AUTO = 'AUTO',
 	MANUAL = 'MANUAL',
+	UPDATED = 'Uuendatud: ',
 }
 class DeviceControls {
 	private html: HTMLDivElement;
 	private powerButton: HTMLDivElement;
 	private autoButton: HTMLDivElement;
+	private updateField: HTMLDivElement;
 	private protocol: string;
 	private large: boolean;
+	private iconsStateHandler: (state: string) => void;
 
-	constructor() {
+	constructor(iconState: (state: string) => void) {
 		this.init();
+		this.iconsStateHandler = iconState;
 	}
 	dispose(): void {
+		ClientEventDispacher.unregister(ClientEvents.DeviceUpdate, this.onDeviceUpdate, this);
 		while (this.html.firstChild) {
 			this.html.removeChild(this.html.lastChild);
 		}
+		this.updateField = null;
 		this.powerButton = null;
 		this.autoButton = null;
 		this.html = null;
@@ -36,33 +42,42 @@ class DeviceControls {
 		this.powerButton.className = 'button ripple';
 		this.autoButton = document.createElement('div');
 		this.autoButton.className = 'button ripple';
+		this.updateField = document.createElement('div');
+		this.updateField.className = 'datefield';
 
 		this.autoButton.classList.add('hidden');
 
 		this.autoButton.onclick = this.onAutoClick.bind(this);
 		this.powerButton.onclick = this.onPowerClick.bind(this);
+
 		this.html.appendChild(this.powerButton);
 		this.html.appendChild(this.autoButton);
 
 		this.powerButton.innerHTML = ButtonLabelState.ON;
 		this.autoButton.innerHTML = ButtonLabelState.AUTO;
+
+		this.html.appendChild(this.updateField);
 	}
 	private onDeviceUpdate(msg: DeviceUpdate): void {
-		if (msg.protocol == this.protocol) {
-			console.log('onDeviceUpdate', msg);
-			this.powerButton.innerHTML = msg.state;
-			this.powerButton.classList.remove('on', 'off');
-			this.powerButton.classList.add(msg.state.toLowerCase());
-
-			this.autoButton.innerHTML =
-				msg.auto == true ? ButtonLabelState.AUTO : ButtonLabelState.MANUAL;
-			this.autoButton.classList.add(this.autoButton.innerHTML.toLowerCase());
-			if (this.large) {
-				this.autoButton.classList.remove('hidden');
-			} else {
-				this.autoButton.classList.add('hidden');
-			}
+		if (msg.protocol != this.protocol) {
+			return;
 		}
+		//	console.log('onDeviceUpdate', msg);
+		this.powerButton.innerHTML = msg.state;
+		this.powerButton.classList.remove('on', 'off');
+		this.autoButton.classList.remove('auto', 'manual');
+		this.powerButton.classList.add(msg.state.toLowerCase());
+		this.updateField.innerHTML =
+			ButtonLabelState.UPDATED + new Date(msg.lastupdate).toLocaleTimeString();
+
+		this.autoButton.innerHTML = msg.auto == true ? ButtonLabelState.AUTO : ButtonLabelState.MANUAL;
+		this.autoButton.classList.add(this.autoButton.innerHTML.toLowerCase());
+		if (this.large) {
+			this.autoButton.classList.remove('hidden');
+		} else {
+			this.autoButton.classList.add('hidden');
+		}
+		this.iconsStateHandler(msg.state.toLowerCase());
 	}
 	private onAutoClick(): void {
 		COM.out({topic: NodeRedMessage.DeviceUpdate, protocol: this.protocol, payload: 'auto'});

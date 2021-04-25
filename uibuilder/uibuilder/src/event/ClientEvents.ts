@@ -1,5 +1,7 @@
 /// <reference path="../protocol/Sensor.ts" />
 const enum ClientEvents {
+	Connected,
+	Disconnected,
 	SensorUpdate,
 	DeviceUpdate,
 }
@@ -13,4 +15,5 @@ interface DeviceUpdate {
 	protocol: string;
 	state: string;
 	auto: boolean;
+	lastupdate: number;
 }

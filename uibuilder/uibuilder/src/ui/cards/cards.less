@@ -7,6 +7,36 @@
 	transition: all 1s ease-in-out;
 	filter: drop-shadow(0px 0px 4px var(--btn-shadow));
 }
+
+.card .cardicon {
+	position: absolute;
+	right: 0px;
+	font-size: 1em;
+	padding: 0.4em;
+}
+.card.large .cardicon,
+.card.tall .cardicon {
+	font-size: 2em;
+}
+.iconcolor {
+	color: var(--lightText);
+	opacity: 0.5;
+}
+.iconcolor-on {
+	color: var(--btn-0);
+	opacity: 0.9;
+	filter: drop-shadow(0px -4px 8px var(--btn-0));
+}
+.ventrun {
+	color: var(--btn-0);
+	opacity: 0.9;
+	filter: drop-shadow(0px -4px 8px var(--btn-0));
+}
+.bulbshine {
+	color: yellow;
+	opacity: 0.9;
+	filter: drop-shadow(0px -4px 8px yellow);
+}
 .card .img {
 	position: absolute;
 	background-size: cover;
@@ -16,15 +46,23 @@
 	right: 65%;
 	opacity: 0.5;
 	display: none;
+	z-index: -1;
 }
 .card.large .img {
 	right: 65%;
 	opacity: 1;
 	display: block;
+	filter: drop-shadow(2px 0px 6px black);
 }
 
 .card.large {
 	grid-column: span 2;
+	grid-row: span 2;
+}
+.card.wide {
+	grid-column: span 2;
+}
+.card.tall {
 	grid-row: span 2;
 }
 .card .cardhead {
@@ -52,4 +90,10 @@
 }
 .card.large .subheader {
 	font-size: 1.1em;
+}
+.card.tall header {
+	font-size: 1.3em;
+}
+.card.tall .subheader {
+	font-size: 0.8em;
 }

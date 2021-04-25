@@ -22,30 +22,44 @@ var BaseCard = (function () {
         while (this.html.firstChild) {
             this.html.removeChild(this.html.lastChild);
         }
+        this.icon = null;
         this.head = null;
         this.html = null;
     };
     BaseCard.prototype.getHTML = function () {
         return this.html;
     };
+    BaseCard.prototype.setGrowMode = function (mode) {
+        this.growMode = mode;
+    };
     BaseCard.prototype.setProtocol = function (src) { };
-    BaseCard.prototype.setHeader = function (main, sub, icon) { };
+    BaseCard.prototype.setHeader = function (main, sub, icon) {
+        if (icon) {
+            var ic = document.createElement('i');
+            ic.className = icon;
+            this.icon.appendChild(ic);
+        }
+    };
     BaseCard.prototype.init = function () {
         this.large = false;
         this.html = document.createElement('div');
         this.html.className = 'card';
         this.head = document.createElement('div');
         this.head.className = 'cardhead';
+        this.icon = document.createElement('div');
+        this.icon.className = 'cardicon iconcolor';
+        this.head.appendChild(this.icon);
         this.head.onclick = this.resize.bind(this);
+        this.html.appendChild(this.head);
     };
     BaseCard.prototype.resize = function () {
         if (this.large) {
             this.large = false;
-            this.html.classList.remove('large');
+            this.html.classList.remove(this.growMode);
         }
         else {
             this.large = true;
-            this.html.classList.add('large');
+            this.html.classList.add(this.growMode);
         }
     };
     return BaseCard;
@@ -176,14 +190,13 @@ var GaugeCard = (function (_super) {
         return _super !== null && _super.apply(this, arguments) || this;
     }
     GaugeCard.prototype.dispose = function () {
-        ClientEventDispacher.unregister(0, this.onSensorUpdate, this);
+        ClientEventDispacher.unregister(2, this.onSensorUpdate, this);
         this.content.dispose();
-        while (this.html.firstChild) {
-            this.html.removeChild(this.html.lastChild);
-        }
         this.content = null;
         this.header = null;
         this.subheader = null;
+        this.image = null;
+        _super.prototype.dispose.call(this);
     };
     GaugeCard.prototype.getHTML = function () {
         return this.html;
@@ -191,14 +204,14 @@ var GaugeCard = (function (_super) {
     GaugeCard.prototype.setProtocol = function (src) {
         this.protocol = src;
     };
-    GaugeCard.prototype.setHeader = function (main, sub) {
+    GaugeCard.prototype.setHeader = function (main, sub, icon) {
+        _super.prototype.setHeader.call(this, main, sub, icon);
         this.header.innerHTML = main;
         this.subheader.innerHTML = sub;
     };
     GaugeCard.prototype.setOptions = function (min, max, color, unit, image) {
         this.content.setOptions(min, max, color, unit);
         if (image) {
-            console.log('image', image);
             this.image.style.backgroundImage = 'url(' + image + ')';
         }
     };
@@ -212,10 +225,9 @@ var GaugeCard = (function (_super) {
         this.subheader.className = 'subheader';
         this.head.appendChild(this.header);
         this.head.appendChild(this.subheader);
-        this.html.appendChild(this.head);
         this.content = new FillGauge(15, 100);
         this.html.appendChild(this.content.getHTML());
-        ClientEventDispacher.register(0, this.onSensorUpdate, this);
+        ClientEventDispacher.register(2, this.onSensorUpdate, this);
     };
     GaugeCard.prototype.onSensorUpdate = function (msg) {
         if (msg.protocol == this.protocol) {
@@ -225,13 +237,16 @@ var GaugeCard = (function (_super) {
     return GaugeCard;
 }(BaseCard));
 var DeviceControls = (function () {
-    function DeviceControls() {
+    function DeviceControls(iconState) {
         this.init();
+        this.iconsStateHandler = iconState;
     }
     DeviceControls.prototype.dispose = function () {
+        ClientEventDispacher.unregister(3, this.onDeviceUpdate, this);
         while (this.html.firstChild) {
             this.html.removeChild(this.html.lastChild);
         }
+        this.updateField = null;
         this.powerButton = null;
         this.autoButton = null;
         this.html = null;
@@ -241,7 +256,7 @@ var DeviceControls = (function () {
     };
     DeviceControls.prototype.setProtocol = function (p) {
         this.protocol = p;
-        ClientEventDispacher.register(1, this.onDeviceUpdate, this);
+        ClientEventDispacher.register(3, this.onDeviceUpdate, this);
     };
     DeviceControls.prototype.init = function () {
         this.html = document.createElement('div');
@@ -250,6 +265,8 @@ var DeviceControls = (function () {
         this.powerButton.className = 'button ripple';
         this.autoButton = document.createElement('div');
         this.autoButton.className = 'button ripple';
+        this.updateField = document.createElement('div');
+        this.updateField.className = 'datefield';
         this.autoButton.classList.add('hidden');
         this.autoButton.onclick = this.onAutoClick.bind(this);
         this.powerButton.onclick = this.onPowerClick.bind(this);
@@ -257,23 +274,27 @@ var DeviceControls = (function () {
         this.html.appendChild(this.autoButton);
         this.powerButton.innerHTML = "ON";
         this.autoButton.innerHTML = "AUTO";
+        this.html.appendChild(this.updateField);
     };
     DeviceControls.prototype.onDeviceUpdate = function (msg) {
-        if (msg.protocol == this.protocol) {
-            console.log('onDeviceUpdate', msg);
-            this.powerButton.innerHTML = msg.state;
-            this.powerButton.classList.remove('on', 'off');
-            this.powerButton.classList.add(msg.state.toLowerCase());
-            this.autoButton.innerHTML =
-                msg.auto == true ? "AUTO" : "MANUAL";
-            this.autoButton.classList.add(this.autoButton.innerHTML.toLowerCase());
-            if (this.large) {
-                this.autoButton.classList.remove('hidden');
-            }
-            else {
-                this.autoButton.classList.add('hidden');
-            }
+        if (msg.protocol != this.protocol) {
+            return;
         }
+        this.powerButton.innerHTML = msg.state;
+        this.powerButton.classList.remove('on', 'off');
+        this.autoButton.classList.remove('auto', 'manual');
+        this.powerButton.classList.add(msg.state.toLowerCase());
+        this.updateField.innerHTML =
+            "Uuendatud: " + new Date(msg.lastupdate).toLocaleTimeString();
+        this.autoButton.innerHTML = msg.auto == true ? "AUTO" : "MANUAL";
+        this.autoButton.classList.add(this.autoButton.innerHTML.toLowerCase());
+        if (this.large) {
+            this.autoButton.classList.remove('hidden');
+        }
+        else {
+            this.autoButton.classList.add('hidden');
+        }
+        this.iconsStateHandler(msg.state.toLowerCase());
     };
     DeviceControls.prototype.onAutoClick = function () {
         COM.out({ topic: "deviceUpdate", protocol: this.protocol, payload: 'auto' });
@@ -294,24 +315,57 @@ var DeviceControls = (function () {
 }());
 var ControllerCard = (function (_super) {
     __extends(ControllerCard, _super);
-    function ControllerCard() {
-        return _super !== null && _super.apply(this, arguments) || this;
+    function ControllerCard(deviceType) {
+        var _this = _super.call(this) || this;
+        _this.deviceType = deviceType;
+        return _this;
     }
     ControllerCard.prototype.dispose = function () {
-        while (this.html.firstChild) {
-            this.html.removeChild(this.html.lastChild);
-        }
+        this.content.dispose();
         this.content = null;
         this.header = null;
-        this.field = null;
         this.html = null;
+        _super.prototype.dispose.call(this);
     };
     ControllerCard.prototype.setProtocol = function (src) {
         this.content.setProtocol(src);
     };
-    ControllerCard.prototype.setHeader = function (main, sub) {
+    ControllerCard.prototype.setHeader = function (main, sub, icon) {
+        _super.prototype.setHeader.call(this, main, sub, icon);
         this.header.innerHTML = main;
         this.subheader.innerHTML = sub;
+    };
+    ControllerCard.prototype.iconsState = function (state) {
+        if (this.deviceType == 0) {
+            if (state == 'on') {
+                this.icon.classList.add('bulbshine');
+                this.icon.classList.remove('iconcolor');
+            }
+            else {
+                this.icon.classList.remove('bulbshine');
+                this.icon.classList.add('iconcolor');
+            }
+        }
+        if (this.deviceType == 3) {
+            if (state == 'on') {
+                this.icon.classList.add('iconcolor-on');
+                this.icon.classList.remove('iconcolor');
+            }
+            else {
+                this.icon.classList.remove('iconcolor-on');
+                this.icon.classList.add('iconcolor');
+            }
+        }
+        if (this.deviceType == 1) {
+            if (state == 'on') {
+                this.icon.classList.add('ventrun', 'rotate');
+                this.icon.classList.remove('iconcolor');
+            }
+            else {
+                this.icon.classList.remove('ventrun', 'rotate');
+                this.icon.classList.add('iconcolor');
+            }
+        }
     };
     ControllerCard.prototype.init = function () {
         _super.prototype.init.call(this);
@@ -321,7 +375,7 @@ var ControllerCard = (function (_super) {
         this.head.appendChild(this.header);
         this.head.appendChild(this.subheader);
         this.html.appendChild(this.head);
-        this.content = new DeviceControls();
+        this.content = new DeviceControls(this.iconsState.bind(this));
         this.html.appendChild(this.content.getHtml());
     };
     ControllerCard.prototype.resize = function () {
@@ -339,7 +393,9 @@ var DefaultView = (function () {
             {
                 label: 'saun',
                 sublabel: 'leiliruum',
+                icon: 'fa fa-thermometer',
                 type: 1,
+                grow: "large",
                 protocol: 'sonoff-saun.DS18B20.Temperature',
                 options: { min: 15, max: 100, color: '#007800', unit: '°C', image: 'images/saun.jpg' },
                 layout: false,
@@ -347,124 +403,179 @@ var DefaultView = (function () {
             {
                 label: 'saun',
                 sublabel: 'eesruum',
+                icon: 'fa fa-thermometer',
                 type: 1,
+                grow: "large",
                 protocol: 'sonoff-floorheating-temps.DS18B20-5.Temperature',
-                options: { min: 15, max: 30, color: '#007800', unit: '°C' },
+                options: { min: 15, max: 30, color: '#007800', unit: '°C', image: 'images/eesruum.jpg' },
             },
             {
                 label: 'saun',
                 sublabel: 'niiskus',
+                icon: 'fa fa-tint',
                 type: 1,
+                grow: "large",
                 protocol: 'sonoff-saun.AM2301.Humidity',
-                options: { min: 30, max: 100, color: '#005599', unit: '%' },
+                options: {
+                    min: 30,
+                    max: 100,
+                    color: '#005599',
+                    unit: '%',
+                    image: 'images/niiskus.jpg',
+                },
             },
             {
                 label: 'vannituba',
                 sublabel: 'temperatuur',
+                icon: 'fa fa-thermometer',
                 type: 1,
+                grow: "large",
                 protocol: 'sonoff-th-wc.AM2301.Temperature',
-                options: { min: 15, max: 30, color: '#007800', unit: '°C' },
+                options: { min: 15, max: 30, color: '#007800', unit: '°C', image: 'images/vannituba.jpg' },
             },
             {
                 label: 'vannituba',
                 sublabel: 'niiskus',
+                icon: 'fa fa-tint',
                 type: 1,
+                grow: "large",
                 protocol: 'sonoff-th-wc.AM2301.Humidity',
-                options: { min: 30, max: 100, color: '#005599', unit: '%' },
+                options: {
+                    min: 30,
+                    max: 100,
+                    color: '#005599',
+                    unit: '%',
+                    image: 'images/vannituba-niiskus.jpg',
+                },
             },
             {
                 label: 'põrandaküte',
                 sublabel: 'pealevool',
+                icon: 'fa fa-thermometer',
                 type: 1,
+                grow: "large",
                 protocol: 'sonoff-floorheating-temps.DS18B20-2.Temperature',
-                options: { min: 18, max: 30, color: '#770099', unit: '°C' },
+                options: { min: 18, max: 30, color: '#770099', unit: '°C', image: 'images/pk-pealevool.jpg' },
             },
             {
                 label: 'põrandaküte',
                 sublabel: 'tagasivool',
+                icon: 'fa fa-thermometer',
                 type: 1,
+                grow: "large",
                 protocol: 'sonoff-floorheating-temps.DS18B20-1.Temperature',
-                options: { min: 18, max: 30, color: '#770099', unit: '°C' },
+                options: {
+                    min: 18,
+                    max: 30,
+                    color: '#770099',
+                    unit: '°C',
+                    image: 'images/pk-tagasivool.jpg',
+                },
             },
             {
                 label: 'lisaküte',
                 sublabel: 'pealevool',
+                icon: 'fa fa-thermometer',
                 type: 1,
+                grow: "large",
                 protocol: 'sonoff-floorheating-temps.DS18B20-4.Temperature',
-                options: { min: 18, max: 50, unit: '°C' },
+                options: { min: 18, max: 50, unit: '°C', image: 'images/lisa-peale.jpg' },
             },
             {
                 label: 'lisaküte',
                 sublabel: 'tagasivool',
+                icon: 'fa fa-thermometer',
                 type: 1,
+                grow: "large",
                 protocol: 'sonoff-floorheating-temps.DS18B20-3.Temperature',
-                options: { min: 18, max: 50, unit: '°C' },
+                options: { min: 18, max: 50, unit: '°C', image: 'images/lisa-tagasi.jpg' },
             },
             {
                 label: 'Taustvalgus',
                 sublabel: 'Televiisori taustvalgus',
+                icon: 'fa fa-lightbulb-o',
                 type: 2,
+                grow: "wide",
+                deviceType: 0,
                 protocol: 'tvbacklight',
             },
             {
                 label: 'Võimendi',
                 sublabel: 'Puhkeruumi sound',
+                icon: 'fa fa-music',
                 type: 2,
+                grow: "wide",
+                deviceType: 3,
                 protocol: 'amplifier',
             },
             {
                 label: 'Mini ventilaatorid',
                 sublabel: 'Puhkeruumi õhuringlus',
+                icon: 'fa fa-crosshairs',
                 type: 2,
+                grow: "wide",
+                deviceType: 1,
                 protocol: 'minivent',
             },
             {
                 label: 'Ventilaator',
                 sublabel: 'Väljatõmbe ventilaator',
+                icon: 'fa fa-crosshairs',
                 type: 2,
+                grow: "wide",
+                deviceType: 1,
                 protocol: 'vent',
             },
             {
                 label: 'Köögi töövalgus',
                 sublabel: 'Tööpinna valgusti',
+                icon: 'fa fa-lightbulb-o',
                 type: 2,
+                grow: "wide",
+                deviceType: 0,
                 protocol: 'kitchenworklight',
             },
             {
                 label: 'Köögi õhtuvalgus',
                 sublabel: 'Meeleolu valgustid',
+                icon: 'fa fa-lightbulb-o',
                 type: 2,
+                grow: "wide",
+                deviceType: 0,
                 protocol: 'kitchentoplight',
             },
             {
                 label: 'Voodi õhtuvalgus',
                 sublabel: 'Meeleolu valgustid',
+                icon: 'fa fa-lightbulb-o',
                 type: 2,
+                grow: "wide",
+                deviceType: 0,
                 protocol: 'bedunderlight',
             },
         ];
-        for (var index = 0; index < cards.length; index++) {
-            var card;
-            switch (cards[index].type) {
+        for (var i = 0; i < cards.length; i++) {
+            var card = void 0;
+            var c = cards[i];
+            switch (c.type) {
                 case 1: {
                     card = new GaugeCard();
-                    card.setHeader(cards[index].label, cards[index].sublabel);
-                    card.setProtocol(cards[index].protocol);
-                    card.setOptions(cards[index].options.min, cards[index].options.max, cards[index].options.color, cards[index].options.unit, cards[index].options.image);
-                    if (cards[index].layout) {
-                        card.getHTML().style.gridColumn = cards[index].layout.column;
-                        card.getHTML().style.gridRow = cards[index].layout.row;
-                    }
-                    this.root.appendChild(card.getHTML());
+                    card.setOptions(c.options.min, c.options.max, c.options.color, c.options.unit, c.options.image);
                     break;
                 }
                 case 2: {
-                    card = new ControllerCard();
-                    card.setHeader(cards[index].label, cards[index].sublabel);
-                    card.setProtocol(cards[index].protocol);
-                    this.root.appendChild(card.getHTML());
+                    card = new ControllerCard(c.deviceType);
+                    break;
                 }
             }
+            card.setHeader(c.label, c.sublabel, c.icon);
+            card.setProtocol(c.protocol);
+            card.setGrowMode(c.grow);
+            if (c.layout) {
+                card.getHTML().style.gridColumn = c.layout.column;
+                card.getHTML().style.gridRow = c.layout.row;
+            }
+            this.root.appendChild(card.getHTML());
         }
     };
     return DefaultView;
@@ -472,11 +583,20 @@ var DefaultView = (function () {
 var Layout = (function () {
     function Layout(container) {
         this.root = container;
+        this.onConnectionLost();
         this.init();
     }
     Layout.prototype.init = function () {
+        ClientEventDispacher.register(0, this.onConnection, this);
+        ClientEventDispacher.register(1, this.onConnectionLost, this);
         this.view = new DefaultView(this.root);
         this.view.build();
+    };
+    Layout.prototype.onConnection = function () {
+        this.root.style.filter = 'unset';
+    };
+    Layout.prototype.onConnectionLost = function () {
+        this.root.style.filter = 'sepia(100%) blur(1px)';
     };
     return Layout;
 }());
@@ -485,17 +605,27 @@ var Communcator = (function () {
     function Communcator() {
         this.receiver = null;
     }
+    Communcator.prototype.connection = function (flag) {
+        this.connected = flag;
+        if (flag) {
+            ClientEventDispacher.dispatch({ type: 0 });
+        }
+        else {
+            ClientEventDispacher.dispatch({ type: 1 });
+        }
+    };
     Communcator.prototype.in = function (msg) {
         if (msg.topic == "sensorUpdate") {
             this.toSensorEvent(msg);
         }
         if (msg.topic == "deviceUpdate") {
-            console.log('[COM]in:', msg);
             this.toDeviceEvent(msg);
         }
     };
     Communcator.prototype.out = function (msg) {
-        console.log('[COM]out', msg);
+        if (!this.connected) {
+            console.log('[COM] no connection');
+        }
         if (!this.receiver) {
             console.log('NO RECEIVER');
             return;
@@ -507,7 +637,7 @@ var Communcator = (function () {
     };
     Communcator.prototype.toSensorEvent = function (m) {
         var u = {
-            type: 0,
+            type: 2,
             protocol: m.protocol,
             data: m.payload,
         };
@@ -515,10 +645,11 @@ var Communcator = (function () {
     };
     Communcator.prototype.toDeviceEvent = function (m) {
         var u = {
-            type: 1,
+            type: 3,
             protocol: m.protocol,
             state: m.payload.state,
             auto: m.payload.auto,
+            lastupdate: m.payload.lastupdate,
         };
         ClientEventDispacher.dispatch(u);
     };
@@ -655,6 +786,9 @@ var Env = (function () {
     };
     Env.prototype.incoming = function (msg) {
         COM.in(msg);
+    };
+    Env.prototype.connection = function (flag) {
+        COM.connection(flag);
     };
     Env.prototype.setReceiver = function (f) {
         COM.setReceiver(f);

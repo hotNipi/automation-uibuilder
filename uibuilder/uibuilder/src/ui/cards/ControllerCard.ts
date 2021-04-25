@@ -2,27 +2,59 @@
 class ControllerCard extends BaseCard implements ICard {
 	private content: DeviceControls;
 	private header: HTMLElement;
-
+	protected deviceType: DeviceType;
 	private subheader: HTMLElement;
-	private field: HTMLParagraphElement;
-	private protocol: string;
+
+	constructor(deviceType: DeviceType) {
+		super();
+		this.deviceType = deviceType;
+	}
 
 	dispose(): void {
-		while (this.html.firstChild) {
-			this.html.removeChild(this.html.lastChild);
-		}
+		this.content.dispose();
 		this.content = null;
 		this.header = null;
-		this.field = null;
 		this.html = null;
+		super.dispose();
 	}
 
 	setProtocol(src: string): void {
 		this.content.setProtocol(src);
 	}
-	setHeader(main: string, sub: string): void {
+	setHeader(main: string, sub?: string, icon?: string): void {
+		super.setHeader(main, sub, icon);
 		this.header.innerHTML = main;
 		this.subheader.innerHTML = sub;
+	}
+
+	protected iconsState(state: string): void {
+		if (this.deviceType == DeviceType.Light) {
+			if (state == 'on') {
+				this.icon.classList.add('bulbshine');
+				this.icon.classList.remove('iconcolor');
+			} else {
+				this.icon.classList.remove('bulbshine');
+				this.icon.classList.add('iconcolor');
+			}
+		}
+		if (this.deviceType == DeviceType.Sound) {
+			if (state == 'on') {
+				this.icon.classList.add('iconcolor-on');
+				this.icon.classList.remove('iconcolor');
+			} else {
+				this.icon.classList.remove('iconcolor-on');
+				this.icon.classList.add('iconcolor');
+			}
+		}
+		if (this.deviceType == DeviceType.Vent) {
+			if (state == 'on') {
+				this.icon.classList.add('ventrun', 'rotate');
+				this.icon.classList.remove('iconcolor');
+			} else {
+				this.icon.classList.remove('ventrun', 'rotate');
+				this.icon.classList.add('iconcolor');
+			}
+		}
 	}
 
 	protected init(): void {
@@ -34,7 +66,7 @@ class ControllerCard extends BaseCard implements ICard {
 		this.head.appendChild(this.header);
 		this.head.appendChild(this.subheader);
 		this.html.appendChild(this.head);
-		this.content = new DeviceControls();
+		this.content = new DeviceControls(this.iconsState.bind(this));
 
 		this.html.appendChild(this.content.getHtml());
 	}

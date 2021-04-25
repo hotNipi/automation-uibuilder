@@ -19,7 +19,11 @@ class Env {
 		this.display = new Layout(container);
 	}
 	incoming(msg: any): void {
+		//console.log(msg);
 		COM.in(msg);
+	}
+	connection(flag: boolean): void {
+		COM.connection(flag);
 	}
 	setReceiver(f: any): void {
 		COM.setReceiver(f);

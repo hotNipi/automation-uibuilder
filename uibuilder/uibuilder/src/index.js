@@ -13,5 +13,10 @@ window.onload = function() {
     uibuilder.onChange('msg', function(msg){
         env.incoming(msg)
     })
+    uibuilder.onChange('ioConnected', function(flag){
+       env.connection(flag)
+        
+    })
+
     
 }

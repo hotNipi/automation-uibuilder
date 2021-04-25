@@ -1,4 +1,5 @@
 interface ICard {
+	setGrowMode(grow: GrowMode): void;
 	getHTML(): HTMLDivElement;
 	setHeader: (main: string, sub?: string, icon?: string) => void;
 	setProtocol: (src: string) => void;
@@ -12,4 +13,15 @@ const enum Cards {
 	DfaultCard,
 	GaugeCard,
 	ControllerCard,
+}
+const enum DeviceType {
+	Light,
+	Vent,
+	Socket,
+	Sound,
+}
+const enum GrowMode {
+	Width = 'wide',
+	Height = 'tall',
+	Both = 'large',
 }

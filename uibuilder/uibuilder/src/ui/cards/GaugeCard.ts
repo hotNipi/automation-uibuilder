@@ -3,23 +3,18 @@
 class GaugeCard extends BaseCard implements IGaugeCard {
 	private content: FillGauge;
 	private header: HTMLElement;
-
 	private image: HTMLDivElement;
-
 	private subheader: HTMLElement;
-	private size: HTMLDivElement;
-
 	private protocol: string;
 
 	dispose(): void {
 		ClientEventDispacher.unregister(ClientEvents.SensorUpdate, this.onSensorUpdate, this);
 		this.content.dispose();
-		while (this.html.firstChild) {
-			this.html.removeChild(this.html.lastChild);
-		}
 		this.content = null;
 		this.header = null;
 		this.subheader = null;
+		this.image = null;
+		super.dispose();
 	}
 	getHTML(): HTMLDivElement {
 		return this.html;
@@ -27,14 +22,15 @@ class GaugeCard extends BaseCard implements IGaugeCard {
 	setProtocol(src: string): void {
 		this.protocol = src;
 	}
-	setHeader(main: string, sub: string): void {
+
+	setHeader(main?: string, sub?: string, icon?: string): void {
+		super.setHeader(main, sub, icon);
 		this.header.innerHTML = main;
 		this.subheader.innerHTML = sub;
 	}
 	setOptions(min: number, max: number, color?: string, unit?: string, image?: string): void {
 		this.content.setOptions(min, max, color, unit);
 		if (image) {
-			console.log('image', image);
 			this.image.style.backgroundImage = 'url(' + image + ')';
 		}
 	}
@@ -49,7 +45,7 @@ class GaugeCard extends BaseCard implements IGaugeCard {
 		this.subheader.className = 'subheader';
 		this.head.appendChild(this.header);
 		this.head.appendChild(this.subheader);
-		this.html.appendChild(this.head);
+
 		this.content = new FillGauge(15, 100);
 		this.html.appendChild(this.content.getHTML());
 		ClientEventDispacher.register(ClientEvents.SensorUpdate, this.onSensorUpdate, this);

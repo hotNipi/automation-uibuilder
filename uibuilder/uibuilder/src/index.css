@@ -31,6 +31,17 @@ body {
   gap: 0.6em;
   margin: 0.6em;
 }
+@keyframes rotation {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(359deg);
+  }
+}
+.rotate {
+  animation: rotation 1s infinite linear;
+}
 .card {
   position: relative;
   background: var(--d2);
@@ -39,6 +50,35 @@ body {
   grid-template-rows: 1fr 3fr;
   transition: all 1s ease-in-out;
   filter: drop-shadow(0px 0px 4px var(--btn-shadow));
+}
+.card .cardicon {
+  position: absolute;
+  right: 0px;
+  font-size: 1em;
+  padding: 0.4em;
+}
+.card.large .cardicon,
+.card.tall .cardicon {
+  font-size: 2em;
+}
+.iconcolor {
+  color: var(--lightText);
+  opacity: 0.5;
+}
+.iconcolor-on {
+  color: var(--btn-0);
+  opacity: 0.9;
+  filter: drop-shadow(0px -4px 8px var(--btn-0));
+}
+.ventrun {
+  color: var(--btn-0);
+  opacity: 0.9;
+  filter: drop-shadow(0px -4px 8px var(--btn-0));
+}
+.bulbshine {
+  color: yellow;
+  opacity: 0.9;
+  filter: drop-shadow(0px -4px 8px yellow);
 }
 .card .img {
   position: absolute;
@@ -49,14 +89,22 @@ body {
   right: 65%;
   opacity: 0.5;
   display: none;
+  z-index: -1;
 }
 .card.large .img {
   right: 65%;
   opacity: 1;
   display: block;
+  filter: drop-shadow(2px 0px 6px black);
 }
 .card.large {
   grid-column: span 2;
+  grid-row: span 2;
+}
+.card.wide {
+  grid-column: span 2;
+}
+.card.tall {
   grid-row: span 2;
 }
 .card .cardhead {
@@ -85,9 +133,33 @@ body {
 .card.large .subheader {
   font-size: 1.1em;
 }
+.card.tall header {
+  font-size: 1.3em;
+}
+.card.tall .subheader {
+  font-size: 0.8em;
+}
 .devicecontrols {
   margin: auto;
   justify-content: space-between;
+}
+.card.large .datefield,
+.card.tall .datefield,
+.card.wide .datefield {
+  display: block;
+}
+.card.wide .devicecontrols {
+  margin-left: 45%;
+}
+.datefield {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  padding-left: 1em;
+  padding-bottom: 0.4em;
+  color: var(--lightText);
+  opacity: 0.5;
+  display: none;
 }
 .fillgauge {
   position: relative;
@@ -197,7 +269,7 @@ button:hover {
   background-color: var(--btn-0);
 }
 .manual {
-  background-color: var(--btn-10);
+  background-color: var(--btn-20);
 }
 .hidden {
   display: none;
