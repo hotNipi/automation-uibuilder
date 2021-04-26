@@ -24,6 +24,7 @@ interface DS18B20 {
 }
 
 const enum Protocol {
+	ProtocolFilter = 'node-red.protocol',
 	SaunaTemp = 'sonoff-saun.DS18B20.Temperature',
 	LobbyTemp = 'sonoff-floorheating-temps.DS18B20-5.Temperature',
 	SaunaHum = 'sonoff-saun.AM2301.Humidity',

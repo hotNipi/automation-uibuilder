@@ -14,7 +14,7 @@ class Communcator implements COM {
 	private connected: boolean;
 	constructor() {
 		this.receiver = null;
-		this.protocolfilter = [];
+		this.protocolfilter = [Protocol.ProtocolFilter];
 	}
 	connection(flag: boolean): void {
 		this.connected = flag;
@@ -28,7 +28,6 @@ class Communcator implements COM {
 		if (!this.protocolfilter.includes(p)) {
 			this.protocolfilter.push(p);
 		}
-		console.log('PROTOCOLS', this.protocolfilter);
 	}
 	removeProtocolFilter(p: Protocol): void {
 		const index: number = this.protocolfilter.indexOf(p, 0);
@@ -41,6 +40,14 @@ class Communcator implements COM {
 			return;
 		}
 		if (!this.protocolfilter.includes(msg.protocol)) {
+			return;
+		}
+		if (msg.topic == NodeRedMessage.ProtocolFilter) {
+			this.out({
+				topic: NodeRedMessage.ProtocolFilter,
+				protocol: Protocol.ProtocolFilter,
+				payload: this.protocolfilter,
+			});
 			return;
 		}
 		if (msg.topic == NodeRedMessage.SensorUpdate) {
@@ -56,6 +63,7 @@ class Communcator implements COM {
 	out(msg: any): void {
 		if (!this.connected) {
 			console.log('[COM] no connection');
+			return;
 		}
 		//console.log('[COM]out', msg);
 		if (!this.receiver) {

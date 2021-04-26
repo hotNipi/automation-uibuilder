@@ -494,7 +494,7 @@
         "type": "function",
         "z": "f56ccabd.7567e8",
         "name": "convert to message",
-        "func": "function updateClient(name,force){\n    let client = global.get(name)\n    if(client && client.controller){\n        let controller = global.get(client.controller.name)\n        client.lastupdate = controller.lastupdate\n        if(client.controller.prop == msg.command || force){\n            if(client.state != controller.states[client.controller.prop]){\n                client.state = controller.states[client.controller.prop]\n                if(force){\n                    client.desiredstate = client.state\n                }\n                \n            }\n        }\n        node.send({topic:\"deviceUpdate\", protocol:client.name, payload:{state:client.state,auto:client.auto,lastupdate:client.lastupdate}})\n        global.set(client.name,client)\n    }\n}\n\nfunction checkClientState(name){\n    let client = global.get(name)\n    if(client){\n        if(client.desiredstate != \"INIT\" && client.desiredstate != client.state){\n            node.send({topic:\"stateMismatchUpdate\", source:client.name, payload:client.desiredstate})\n        }\n        else{\n            updateClient(name,true)\n        }\n    }\n}\n\nfunction sendSensors(c){\n    let controller = global.get(c)\n    if(controller && controller.sensors){\n        Object.keys(controller.sensors).forEach(sensor => {\n            Object.keys(controller.sensors[sensor]).forEach(prop => {\n                if(prop != \"name\" && prop != \"lastupdate\"){\n                    var p = [c,sensor,prop]\n                    node.send({topic:\"sensorUpdate\",protocol:p.join('.'),payload:controller.sensors[sensor][prop],timestamp:controller.sensors[sensor].lastupdate})\n                }\n            })\n        })\n    }\n}\n\nswitch(msg.command){\n    case \"SENSOR\":{\n        sendSensors(msg.target)\n        break\n    }\n    case \"POWER\":\n    case \"POWER1\":\n    case \"POWER2\":\n    case \"RESULT\":{\n        msg.payload.forEach(client => updateClient(client))\n        break;\n    }\n    case \"STATE\": {\n        msg.payload.forEach(client => checkClientState(client))\n        break;\n    }\n    case \"LWT\":{\n        node.send({topic:\"controllerUpdate\",source:msg.target, payload:global.get(msg.target).connection.status})\n        break\n    }\n}",
+        "func": "let pf = global.get('protocolFilter') || []\nfunction updateClient(name,force){\n    let client = global.get(name)\n    if(client && client.controller){\n        let controller = global.get(client.controller.name)\n        client.lastupdate = controller.lastupdate\n        if(client.controller.prop == msg.command || force){\n            if(client.state != controller.states[client.controller.prop]){\n                client.state = controller.states[client.controller.prop]\n                if(force){\n                    client.desiredstate = client.state\n                }\n                \n            }\n        }\n        if(pf.includes(client.name)){\n             node.send({topic:\"deviceUpdate\", protocol:client.name, payload:{state:client.state,auto:client.auto,lastupdate:client.lastupdate}})\n        }\n        global.set(client.name,client)\n    }\n}\n\nfunction checkClientState(name){\n    let client = global.get(name)\n    if(client){\n        if(client.desiredstate != \"INIT\" && client.desiredstate != client.state){\n            node.send({topic:\"stateMismatchUpdate\", source:client.name, payload:client.desiredstate})\n        }\n        else{\n            updateClient(name,true)\n        }\n    }\n}\n\nfunction sendSensors(c){\n    let controller = global.get(c)\n    if(controller && controller.sensors){\n        Object.keys(controller.sensors).forEach(sensor => {\n            Object.keys(controller.sensors[sensor]).forEach(prop => {\n                if(prop != \"name\" && prop != \"lastupdate\"){\n                    var p = [c,sensor,prop].join('.')\n                    if(pf.includes(p)){\n                        node.send({topic:\"sensorUpdate\",protocol:p,payload:controller.sensors[sensor][prop],timestamp:controller.sensors[sensor].lastupdate})\n                    }\n                }\n            })\n        })\n    }\n}\n\nswitch(msg.command){\n    case \"SENSOR\":{\n        sendSensors(msg.target)\n        break\n    }\n    case \"POWER\":\n    case \"POWER1\":\n    case \"POWER2\":\n    case \"RESULT\":{\n        msg.payload.forEach(client => updateClient(client))\n        break;\n    }\n    case \"STATE\": {\n        msg.payload.forEach(client => checkClientState(client))\n        break;\n    }\n    case \"LWT\":{\n        node.send({topic:\"controllerUpdate\",source:msg.target, payload:global.get(msg.target).connection.status})\n        break\n    }\n}",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
@@ -654,8 +654,8 @@
         "qos": "1",
         "retain": "false",
         "broker": "1cdc2a24.b3be46",
-        "x": 530,
-        "y": 440,
+        "x": 670,
+        "y": 460,
         "wires": []
     },
     {
@@ -917,11 +917,11 @@
         "y": 540,
         "wires": [
             [
-                "fdd787bc.ed3ee8"
+                "6468fb15.8f3114",
+                "ed753c5b.03f8"
             ],
             [
-                "38d1dfd4.1cf65",
-                "ed753c5b.03f8"
+                "38d1dfd4.1cf65"
             ]
         ]
     },
@@ -1111,20 +1111,20 @@
         "type": "function",
         "z": "f56ccabd.7567e8",
         "name": "from ui",
-        "func": "if(msg.topic == \"deviceUpdate\"){\n    let device = global.get(msg.protocol)\n    if(msg.payload == 'power'){\n        let cmd = \"ON\"\n        if(device.state == \"ON\"){\n            cmd = \"OFF\"\n        }\n        device.desiredstate = cmd\n        global.set(device.name,device)\n        msg.topic = \"cmnd/\"+device.controller.name+\"/\"+device.controller.prop\n        msg.payload = cmd\n        \n        return [msg,null];\n    }\n    else if(msg.payload == 'auto'){\n        device.auto = !device.auto\n        global.set(device.name,device)\n        msg = {topic:\"deviceUpdate\", protocol:device.name, payload:{state:device.state,auto:device.auto,lastupdate:device.lastupdate}}\n        return [null,msg]\n    }\n\n}\n",
+        "func": "\n\nif(msg.topic == \"deviceUpdate\"){\n    let device = global.get(msg.protocol)\n    if(msg.payload == 'power'){\n        let cmd = \"ON\"\n        if(device.state == \"ON\"){\n            cmd = \"OFF\"\n        }\n        device.desiredstate = cmd\n        global.set(device.name,device)\n        msg.topic = \"cmnd/\"+device.controller.name+\"/\"+device.controller.prop\n        msg.payload = cmd\n        \n        return [null,msg];\n    }\n    else if(msg.payload == 'auto'){\n        device.auto = !device.auto\n        global.set(device.name,device)\n        msg = {topic:\"deviceUpdate\", protocol:device.name, payload:{state:device.state,auto:device.auto,lastupdate:device.lastupdate}}\n        return [msg,null]\n    }\n\n}\n",
         "outputs": 2,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 390,
-        "y": 500,
+        "x": 430,
+        "y": 480,
         "wires": [
             [
-                "9581b2c8.b659d"
+                "b42ec43e.9a72b8"
             ],
             [
-                "b42ec43e.9a72b8"
+                "9581b2c8.b659d"
             ]
         ]
     },
@@ -1136,8 +1136,8 @@
         "links": [
             "7bb9ea7f.8aec24"
         ],
-        "x": 535,
-        "y": 500,
+        "x": 515,
+        "y": 440,
         "wires": []
     },
     {
@@ -1145,7 +1145,7 @@
         "type": "function",
         "z": "f56ccabd.7567e8",
         "name": "on ui connected",
-        "func": "if(msg.from && msg.from == 'client'){\n    if(msg.uibuilderCtrl == 'ready for content' ){\n        let devices = global.get('devices') || []\n        devices.forEach(d => {\n            let device = global.get(d)\n            node.send({topic:\"deviceUpdate\", protocol:device.name, payload:{state:device.state,auto:device.auto,lastupdate:device.lastupdate}})\n        })\n        let controllers = global.get('controllers') || []\n        controllers.forEach(c => {\n            let controller = global.get(c)\n            if(controller && controller.sensors){\n                Object.keys(controller.sensors).forEach(sensor => {\n                    Object.keys(controller.sensors[sensor]).forEach(prop => {\n                        if(prop != \"name\" && prop != \"lastupdate\"){\n                            var p = [c,sensor,prop]\n                            node.send({topic:\"sensorUpdate\",protocol:p.join('.'),payload:controller.sensors[sensor][prop],timestamp:controller.sensors[sensor].lastupdate})\n                        }\n                    })\n                })\n            }\n        })\n    }\n}\n",
+        "func": "if(msg.from && msg.from == 'client'){\n    if(msg.uibuilderCtrl == 'ready for content' ){\n        node.send({topic:'protocolFilter',protocol:'node-red.protocol'})\n    }\n}\n",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
@@ -1176,8 +1176,8 @@
         "id": "ed753c5b.03f8",
         "type": "debug",
         "z": "f56ccabd.7567e8",
-        "name": "",
-        "active": false,
+        "name": "CLIENT",
+        "active": true,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
@@ -1185,8 +1185,8 @@
         "targetType": "full",
         "statusVal": "",
         "statusType": "auto",
-        "x": 390,
-        "y": 540,
+        "x": 420,
+        "y": 520,
         "wires": []
     },
     {
@@ -1439,8 +1439,8 @@
         "id": "910f5545.ebd228",
         "type": "debug",
         "z": "f56ccabd.7567e8",
-        "name": "",
-        "active": false,
+        "name": "CONTROL",
+        "active": true,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
@@ -1448,7 +1448,7 @@
         "targetType": "full",
         "statusVal": "",
         "statusType": "auto",
-        "x": 570,
+        "x": 690,
         "y": 540,
         "wires": []
     },
@@ -1458,8 +1458,8 @@
         "z": "f56ccabd.7567e8",
         "name": "toMQTT",
         "links": [],
-        "x": 375,
-        "y": 420,
+        "x": 595,
+        "y": 380,
         "wires": [
             [
                 "9581b2c8.b659d"
@@ -1482,5 +1482,55 @@
         "x": 1220,
         "y": 100,
         "wires": []
+    },
+    {
+        "id": "6468fb15.8f3114",
+        "type": "switch",
+        "z": "f56ccabd.7567e8",
+        "name": "",
+        "property": "topic",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "protocolFilter",
+                "vt": "str"
+            },
+            {
+                "t": "else"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 270,
+        "y": 480,
+        "wires": [
+            [
+                "84b430bf.cf5f2"
+            ],
+            [
+                "fdd787bc.ed3ee8"
+            ]
+        ]
+    },
+    {
+        "id": "84b430bf.cf5f2",
+        "type": "function",
+        "z": "f56ccabd.7567e8",
+        "name": "filters",
+        "func": "if(msg.topic == \"protocolFilter\"){\n    global.set(\"protocolFilter\",msg.payload)\n    let devices = global.get('devices') || []\n        devices.forEach(d => {\n            let device = global.get(d)\n            if(msg.payload.includes(device.name)){\n                node.send({topic:\"deviceUpdate\", protocol:device.name, payload:{state:device.state,auto:device.auto,lastupdate:device.lastupdate}})\n            }\n            \n        })\n        let controllers = global.get('controllers') || []\n        controllers.forEach(c => {\n            let controller = global.get(c)\n            if(controller && controller.sensors){\n                Object.keys(controller.sensors).forEach(sensor => {\n                    Object.keys(controller.sensors[sensor]).forEach(prop => {\n                        if(prop != \"name\" && prop != \"lastupdate\"){\n                            var p = [c,sensor,prop].join('.')\n                            if(msg.payload.includes(p)){\n                                node.send({topic:\"sensorUpdate\",protocol:p,payload:controller.sensors[sensor][prop],timestamp:controller.sensors[sensor].lastupdate}) \n                            }\n                        }\n                    })\n                })\n            }\n        })\n    return\n}",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 430,
+        "y": 420,
+        "wires": [
+            [
+                "b42ec43e.9a72b8"
+            ]
+        ]
     }
 ]

@@ -606,7 +606,7 @@ var COM;
 var Communcator = (function () {
     function Communcator() {
         this.receiver = null;
-        this.protocolfilter = [];
+        this.protocolfilter = ["node-red.protocol"];
     }
     Communcator.prototype.connection = function (flag) {
         this.connected = flag;
@@ -621,7 +621,6 @@ var Communcator = (function () {
         if (!this.protocolfilter.includes(p)) {
             this.protocolfilter.push(p);
         }
-        console.log('PROTOCOLS', this.protocolfilter);
     };
     Communcator.prototype.removeProtocolFilter = function (p) {
         var index = this.protocolfilter.indexOf(p, 0);
@@ -636,6 +635,14 @@ var Communcator = (function () {
         if (!this.protocolfilter.includes(msg.protocol)) {
             return;
         }
+        if (msg.topic == "protocolFilter") {
+            this.out({
+                topic: "protocolFilter",
+                protocol: "node-red.protocol",
+                payload: this.protocolfilter,
+            });
+            return;
+        }
         if (msg.topic == "sensorUpdate") {
             this.toSensorEvent(msg);
             return;
@@ -648,6 +655,7 @@ var Communcator = (function () {
     Communcator.prototype.out = function (msg) {
         if (!this.connected) {
             console.log('[COM] no connection');
+            return;
         }
         if (!this.receiver) {
             console.log('NO RECEIVER');
