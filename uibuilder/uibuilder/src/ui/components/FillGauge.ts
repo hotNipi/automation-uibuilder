@@ -27,8 +27,7 @@ class FillGauge {
 		while (this.html.firstChild) {
 			this.html.removeChild(this.html.lastChild);
 		}
-		this.content = null;
-		this.content = null;
+
 		this.content = null;
 		this.fields = null;
 		this.field = null;

@@ -107,8 +107,6 @@ var FillGauge = (function () {
             this.html.removeChild(this.html.lastChild);
         }
         this.content = null;
-        this.content = null;
-        this.content = null;
         this.fields = null;
         this.field = null;
         this.minfield = null;
@@ -191,6 +189,7 @@ var GaugeCard = (function (_super) {
     }
     GaugeCard.prototype.dispose = function () {
         ClientEventDispacher.unregister(2, this.onSensorUpdate, this);
+        COM.removeProtocolFilter(this.protocol);
         this.content.dispose();
         this.content = null;
         this.header = null;
@@ -201,8 +200,9 @@ var GaugeCard = (function (_super) {
     GaugeCard.prototype.getHTML = function () {
         return this.html;
     };
-    GaugeCard.prototype.setProtocol = function (src) {
-        this.protocol = src;
+    GaugeCard.prototype.setProtocol = function (p) {
+        this.protocol = p;
+        COM.setProtocolFilter(this.protocol);
     };
     GaugeCard.prototype.setHeader = function (main, sub, icon) {
         _super.prototype.setHeader.call(this, main, sub, icon);
@@ -243,6 +243,7 @@ var DeviceControls = (function () {
     }
     DeviceControls.prototype.dispose = function () {
         ClientEventDispacher.unregister(3, this.onDeviceUpdate, this);
+        COM.removeProtocolFilter(this.protocol);
         while (this.html.firstChild) {
             this.html.removeChild(this.html.lastChild);
         }
@@ -256,6 +257,7 @@ var DeviceControls = (function () {
     };
     DeviceControls.prototype.setProtocol = function (p) {
         this.protocol = p;
+        COM.setProtocolFilter(this.protocol);
         ClientEventDispacher.register(3, this.onDeviceUpdate, this);
     };
     DeviceControls.prototype.init = function () {
@@ -396,7 +398,7 @@ var DefaultView = (function () {
                 icon: 'fa fa-thermometer',
                 type: 1,
                 grow: "large",
-                protocol: 'sonoff-saun.DS18B20.Temperature',
+                protocol: "sonoff-saun.DS18B20.Temperature",
                 options: { min: 15, max: 100, color: '#007800', unit: '°C', image: 'images/saun.jpg' },
                 layout: false,
             },
@@ -406,7 +408,7 @@ var DefaultView = (function () {
                 icon: 'fa fa-thermometer',
                 type: 1,
                 grow: "large",
-                protocol: 'sonoff-floorheating-temps.DS18B20-5.Temperature',
+                protocol: "sonoff-floorheating-temps.DS18B20-5.Temperature",
                 options: { min: 15, max: 30, color: '#007800', unit: '°C', image: 'images/eesruum.jpg' },
             },
             {
@@ -415,7 +417,7 @@ var DefaultView = (function () {
                 icon: 'fa fa-tint',
                 type: 1,
                 grow: "large",
-                protocol: 'sonoff-saun.AM2301.Humidity',
+                protocol: "sonoff-saun.AM2301.Humidity",
                 options: {
                     min: 30,
                     max: 100,
@@ -430,7 +432,7 @@ var DefaultView = (function () {
                 icon: 'fa fa-thermometer',
                 type: 1,
                 grow: "large",
-                protocol: 'sonoff-th-wc.AM2301.Temperature',
+                protocol: "sonoff-th-wc.AM2301.Temperature",
                 options: { min: 15, max: 30, color: '#007800', unit: '°C', image: 'images/vannituba.jpg' },
             },
             {
@@ -439,7 +441,7 @@ var DefaultView = (function () {
                 icon: 'fa fa-tint',
                 type: 1,
                 grow: "large",
-                protocol: 'sonoff-th-wc.AM2301.Humidity',
+                protocol: "sonoff-th-wc.AM2301.Humidity",
                 options: {
                     min: 30,
                     max: 100,
@@ -454,7 +456,7 @@ var DefaultView = (function () {
                 icon: 'fa fa-thermometer',
                 type: 1,
                 grow: "large",
-                protocol: 'sonoff-floorheating-temps.DS18B20-2.Temperature',
+                protocol: "sonoff-floorheating-temps.DS18B20-2.Temperature",
                 options: { min: 18, max: 30, color: '#770099', unit: '°C', image: 'images/pk-pealevool.jpg' },
             },
             {
@@ -463,7 +465,7 @@ var DefaultView = (function () {
                 icon: 'fa fa-thermometer',
                 type: 1,
                 grow: "large",
-                protocol: 'sonoff-floorheating-temps.DS18B20-1.Temperature',
+                protocol: "sonoff-floorheating-temps.DS18B20-1.Temperature",
                 options: {
                     min: 18,
                     max: 30,
@@ -478,7 +480,7 @@ var DefaultView = (function () {
                 icon: 'fa fa-thermometer',
                 type: 1,
                 grow: "large",
-                protocol: 'sonoff-floorheating-temps.DS18B20-4.Temperature',
+                protocol: "sonoff-floorheating-temps.DS18B20-4.Temperature",
                 options: { min: 18, max: 50, unit: '°C', image: 'images/lisa-peale.jpg' },
             },
             {
@@ -487,7 +489,7 @@ var DefaultView = (function () {
                 icon: 'fa fa-thermometer',
                 type: 1,
                 grow: "large",
-                protocol: 'sonoff-floorheating-temps.DS18B20-3.Temperature',
+                protocol: "sonoff-floorheating-temps.DS18B20-3.Temperature",
                 options: { min: 18, max: 50, unit: '°C', image: 'images/lisa-tagasi.jpg' },
             },
             {
@@ -497,7 +499,7 @@ var DefaultView = (function () {
                 type: 2,
                 grow: "wide",
                 deviceType: 0,
-                protocol: 'tvbacklight',
+                protocol: "tvbacklight",
             },
             {
                 label: 'Võimendi',
@@ -506,7 +508,7 @@ var DefaultView = (function () {
                 type: 2,
                 grow: "wide",
                 deviceType: 3,
-                protocol: 'amplifier',
+                protocol: "amplifier",
             },
             {
                 label: 'Mini ventilaatorid',
@@ -515,7 +517,7 @@ var DefaultView = (function () {
                 type: 2,
                 grow: "wide",
                 deviceType: 1,
-                protocol: 'minivent',
+                protocol: "minivent",
             },
             {
                 label: 'Ventilaator',
@@ -524,7 +526,7 @@ var DefaultView = (function () {
                 type: 2,
                 grow: "wide",
                 deviceType: 1,
-                protocol: 'vent',
+                protocol: "vent",
             },
             {
                 label: 'Köögi töövalgus',
@@ -533,7 +535,7 @@ var DefaultView = (function () {
                 type: 2,
                 grow: "wide",
                 deviceType: 0,
-                protocol: 'kitchenworklight',
+                protocol: "kitchenworklight",
             },
             {
                 label: 'Köögi õhtuvalgus',
@@ -542,7 +544,7 @@ var DefaultView = (function () {
                 type: 2,
                 grow: "wide",
                 deviceType: 0,
-                protocol: 'kitchentoplight',
+                protocol: "kitchentoplight",
             },
             {
                 label: 'Voodi õhtuvalgus',
@@ -551,7 +553,7 @@ var DefaultView = (function () {
                 type: 2,
                 grow: "wide",
                 deviceType: 0,
-                protocol: 'bedunderlight',
+                protocol: "bedunderlight",
             },
         ];
         for (var i = 0; i < cards.length; i++) {
@@ -604,6 +606,7 @@ var COM;
 var Communcator = (function () {
     function Communcator() {
         this.receiver = null;
+        this.protocolfilter = [];
     }
     Communcator.prototype.connection = function (flag) {
         this.connected = flag;
@@ -614,12 +617,32 @@ var Communcator = (function () {
             ClientEventDispacher.dispatch({ type: 1 });
         }
     };
+    Communcator.prototype.setProtocolFilter = function (p) {
+        if (!this.protocolfilter.includes(p)) {
+            this.protocolfilter.push(p);
+        }
+        console.log('PROTOCOLS', this.protocolfilter);
+    };
+    Communcator.prototype.removeProtocolFilter = function (p) {
+        var index = this.protocolfilter.indexOf(p, 0);
+        if (index > -1) {
+            this.protocolfilter.splice(index, 1);
+        }
+    };
     Communcator.prototype.in = function (msg) {
+        if (!msg.protocol) {
+            return;
+        }
+        if (!this.protocolfilter.includes(msg.protocol)) {
+            return;
+        }
         if (msg.topic == "sensorUpdate") {
             this.toSensorEvent(msg);
+            return;
         }
         if (msg.topic == "deviceUpdate") {
             this.toDeviceEvent(msg);
+            return;
         }
     };
     Communcator.prototype.out = function (msg) {

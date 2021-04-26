@@ -18,7 +18,7 @@ class ControllerCard extends BaseCard implements ICard {
 		super.dispose();
 	}
 
-	setProtocol(src: string): void {
+	setProtocol(src: Protocol): void {
 		this.content.setProtocol(src);
 	}
 	setHeader(main: string, sub?: string, icon?: string): void {

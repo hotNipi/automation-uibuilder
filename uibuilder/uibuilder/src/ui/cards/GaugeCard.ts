@@ -5,10 +5,11 @@ class GaugeCard extends BaseCard implements IGaugeCard {
 	private header: HTMLElement;
 	private image: HTMLDivElement;
 	private subheader: HTMLElement;
-	private protocol: string;
+	private protocol: Protocol;
 
 	dispose(): void {
 		ClientEventDispacher.unregister(ClientEvents.SensorUpdate, this.onSensorUpdate, this);
+		COM.removeProtocolFilter(this.protocol);
 		this.content.dispose();
 		this.content = null;
 		this.header = null;
@@ -19,8 +20,9 @@ class GaugeCard extends BaseCard implements IGaugeCard {
 	getHTML(): HTMLDivElement {
 		return this.html;
 	}
-	setProtocol(src: string): void {
-		this.protocol = src;
+	setProtocol(p: Protocol): void {
+		this.protocol = p;
+		COM.setProtocolFilter(this.protocol);
 	}
 
 	setHeader(main?: string, sub?: string, icon?: string): void {

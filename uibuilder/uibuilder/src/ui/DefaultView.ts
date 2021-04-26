@@ -16,7 +16,7 @@ class DefaultView implements IView {
 				icon: 'fa fa-thermometer',
 				type: Cards.GaugeCard,
 				grow: GrowMode.Both,
-				protocol: 'sonoff-saun.DS18B20.Temperature',
+				protocol: Protocol.SaunaTemp,
 				options: {min: 15, max: 100, color: '#007800', unit: '°C', image: 'images/saun.jpg'},
 				layout: false,
 			},
@@ -27,7 +27,7 @@ class DefaultView implements IView {
 				icon: 'fa fa-thermometer',
 				type: Cards.GaugeCard,
 				grow: GrowMode.Both,
-				protocol: 'sonoff-floorheating-temps.DS18B20-5.Temperature',
+				protocol: Protocol.LobbyTemp,
 				options: {min: 15, max: 30, color: '#007800', unit: '°C', image: 'images/eesruum.jpg'},
 			},
 			{
@@ -36,7 +36,7 @@ class DefaultView implements IView {
 				icon: 'fa fa-tint',
 				type: Cards.GaugeCard,
 				grow: GrowMode.Both,
-				protocol: 'sonoff-saun.AM2301.Humidity',
+				protocol: Protocol.SaunaHum,
 				options: {
 					min: 30,
 					max: 100,
@@ -51,7 +51,7 @@ class DefaultView implements IView {
 				icon: 'fa fa-thermometer',
 				type: Cards.GaugeCard,
 				grow: GrowMode.Both,
-				protocol: 'sonoff-th-wc.AM2301.Temperature',
+				protocol: Protocol.BathroomTemp,
 				options: {min: 15, max: 30, color: '#007800', unit: '°C', image: 'images/vannituba.jpg'},
 			},
 			{
@@ -60,7 +60,7 @@ class DefaultView implements IView {
 				icon: 'fa fa-tint',
 				type: Cards.GaugeCard,
 				grow: GrowMode.Both,
-				protocol: 'sonoff-th-wc.AM2301.Humidity',
+				protocol: Protocol.BathroomHum,
 				options: {
 					min: 30,
 					max: 100,
@@ -76,7 +76,7 @@ class DefaultView implements IView {
 				icon: 'fa fa-thermometer',
 				type: Cards.GaugeCard,
 				grow: GrowMode.Both,
-				protocol: 'sonoff-floorheating-temps.DS18B20-2.Temperature',
+				protocol: Protocol.FloorHeatSupply,
 				options: {min: 18, max: 30, color: '#770099', unit: '°C', image: 'images/pk-pealevool.jpg'},
 			},
 			{
@@ -85,7 +85,7 @@ class DefaultView implements IView {
 				icon: 'fa fa-thermometer',
 				type: Cards.GaugeCard,
 				grow: GrowMode.Both,
-				protocol: 'sonoff-floorheating-temps.DS18B20-1.Temperature',
+				protocol: Protocol.FloorHeatReturn,
 				options: {
 					min: 18,
 					max: 30,
@@ -100,7 +100,7 @@ class DefaultView implements IView {
 				icon: 'fa fa-thermometer',
 				type: Cards.GaugeCard,
 				grow: GrowMode.Both,
-				protocol: 'sonoff-floorheating-temps.DS18B20-4.Temperature',
+				protocol: Protocol.ExtrHeatSupply,
 				options: {min: 18, max: 50, unit: '°C', image: 'images/lisa-peale.jpg'},
 			},
 			{
@@ -109,7 +109,7 @@ class DefaultView implements IView {
 				icon: 'fa fa-thermometer',
 				type: Cards.GaugeCard,
 				grow: GrowMode.Both,
-				protocol: 'sonoff-floorheating-temps.DS18B20-3.Temperature',
+				protocol: Protocol.ExtraHeatReturn,
 				options: {min: 18, max: 50, unit: '°C', image: 'images/lisa-tagasi.jpg'},
 			},
 			{
@@ -119,7 +119,7 @@ class DefaultView implements IView {
 				type: Cards.ControllerCard,
 				grow: GrowMode.Width,
 				deviceType: DeviceType.Light,
-				protocol: 'tvbacklight',
+				protocol: Protocol.TvBackLight,
 			},
 			{
 				label: 'Võimendi',
@@ -128,7 +128,7 @@ class DefaultView implements IView {
 				type: Cards.ControllerCard,
 				grow: GrowMode.Width,
 				deviceType: DeviceType.Sound,
-				protocol: 'amplifier',
+				protocol: Protocol.Amplifier,
 			},
 			{
 				label: 'Mini ventilaatorid',
@@ -137,7 +137,7 @@ class DefaultView implements IView {
 				type: Cards.ControllerCard,
 				grow: GrowMode.Width,
 				deviceType: DeviceType.Vent,
-				protocol: 'minivent',
+				protocol: Protocol.MiniVent,
 			},
 			{
 				label: 'Ventilaator',
@@ -146,7 +146,7 @@ class DefaultView implements IView {
 				type: Cards.ControllerCard,
 				grow: GrowMode.Width,
 				deviceType: DeviceType.Vent,
-				protocol: 'vent',
+				protocol: Protocol.Vent,
 			},
 			{
 				label: 'Köögi töövalgus',
@@ -155,7 +155,7 @@ class DefaultView implements IView {
 				type: Cards.ControllerCard,
 				grow: GrowMode.Width,
 				deviceType: DeviceType.Light,
-				protocol: 'kitchenworklight',
+				protocol: Protocol.KitchenWorkLight,
 			},
 			{
 				label: 'Köögi õhtuvalgus',
@@ -164,7 +164,7 @@ class DefaultView implements IView {
 				type: Cards.ControllerCard,
 				grow: GrowMode.Width,
 				deviceType: DeviceType.Light,
-				protocol: 'kitchentoplight',
+				protocol: Protocol.KitchenTopLight,
 			},
 			{
 				label: 'Voodi õhtuvalgus',
@@ -173,7 +173,7 @@ class DefaultView implements IView {
 				type: Cards.ControllerCard,
 				grow: GrowMode.Width,
 				deviceType: DeviceType.Light,
-				protocol: 'bedunderlight',
+				protocol: Protocol.BedUnderLight,
 			},
 		];
 

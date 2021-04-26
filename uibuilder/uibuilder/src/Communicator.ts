@@ -2,15 +2,19 @@
 interface COM {
 	in: (msg: any) => void;
 	out: (msg: any) => void;
+	setProtocolFilter: (p: Protocol) => void;
+	removeProtocolFilter: (p: Protocol) => void;
 	setReceiver: (r: any) => void;
 	connection: (flag: boolean) => void;
 }
 var COM: COM;
 class Communcator implements COM {
 	private receiver: any;
+	private protocolfilter: Protocol[];
 	private connected: boolean;
 	constructor() {
 		this.receiver = null;
+		this.protocolfilter = [];
 	}
 	connection(flag: boolean): void {
 		this.connected = flag;
@@ -20,13 +24,33 @@ class Communcator implements COM {
 			ClientEventDispacher.dispatch({type: ClientEvents.Disconnected});
 		}
 	}
+	setProtocolFilter(p: Protocol): void {
+		if (!this.protocolfilter.includes(p)) {
+			this.protocolfilter.push(p);
+		}
+		console.log('PROTOCOLS', this.protocolfilter);
+	}
+	removeProtocolFilter(p: Protocol): void {
+		const index: number = this.protocolfilter.indexOf(p, 0);
+		if (index > -1) {
+			this.protocolfilter.splice(index, 1);
+		}
+	}
 	in(msg: any): void {
+		if (!msg.protocol) {
+			return;
+		}
+		if (!this.protocolfilter.includes(msg.protocol)) {
+			return;
+		}
 		if (msg.topic == NodeRedMessage.SensorUpdate) {
 			this.toSensorEvent(msg);
+			return;
 		}
 		if (msg.topic == NodeRedMessage.DeviceUpdate) {
 			//console.log('[COM]in:', msg);
 			this.toDeviceEvent(msg);
+			return;
 		}
 	}
 	out(msg: any): void {

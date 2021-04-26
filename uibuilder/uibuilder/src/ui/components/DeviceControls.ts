@@ -10,7 +10,7 @@ class DeviceControls {
 	private powerButton: HTMLDivElement;
 	private autoButton: HTMLDivElement;
 	private updateField: HTMLDivElement;
-	private protocol: string;
+	private protocol: Protocol;
 	private large: boolean;
 	private iconsStateHandler: (state: string) => void;
 
@@ -20,6 +20,7 @@ class DeviceControls {
 	}
 	dispose(): void {
 		ClientEventDispacher.unregister(ClientEvents.DeviceUpdate, this.onDeviceUpdate, this);
+		COM.removeProtocolFilter(this.protocol);
 		while (this.html.firstChild) {
 			this.html.removeChild(this.html.lastChild);
 		}
@@ -31,8 +32,9 @@ class DeviceControls {
 	getHtml(): HTMLDivElement {
 		return this.html;
 	}
-	setProtocol(p: string): void {
+	setProtocol(p: Protocol): void {
 		this.protocol = p;
+		COM.setProtocolFilter(this.protocol);
 		ClientEventDispacher.register(ClientEvents.DeviceUpdate, this.onDeviceUpdate, this);
 	}
 	private init(): void {

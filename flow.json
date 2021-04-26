@@ -21,13 +21,6 @@
         "info": ""
     },
     {
-        "id": "e9c32823.c6a048",
-        "type": "tab",
-        "label": "Flow 4",
-        "disabled": false,
-        "info": ""
-    },
-    {
         "id": "1cdc2a24.b3be46",
         "type": "mqtt-broker",
         "name": "kelder",
@@ -60,7 +53,7 @@
         "tab": "c71e2691.3704f8",
         "order": 1,
         "disp": true,
-        "width": "6",
+        "width": "35",
         "collapse": false
     },
     {
@@ -157,8 +150,8 @@
             "allowTempTheme": "true",
             "dateFormat": "DD/MM/YYYY",
             "sizes": {
-                "sx": 48,
-                "sy": 48,
+                "sx": 5,
+                "sy": 5,
                 "gx": 6,
                 "gy": 6,
                 "cx": 6,
@@ -638,7 +631,8 @@
         "y": 200,
         "wires": [
             [
-                "fc65eb8e.101568"
+                "fc65eb8e.101568",
+                "6b87bb98.c4a494"
             ],
             [
                 "58ad6961.8135a8"
@@ -1202,8 +1196,8 @@
         "name": "",
         "group": "19f5ed07.08a453",
         "order": 1,
-        "width": "3",
-        "height": "1",
+        "width": "28",
+        "height": "7",
         "label": "",
         "stateField": "payload",
         "enableField": "enable",
@@ -1238,14 +1232,15 @@
         "name": "",
         "group": "19f5ed07.08a453",
         "order": 1,
-        "width": "3",
-        "height": "1",
+        "width": "28",
+        "height": "4",
         "label": "",
         "stateField": "payload",
         "enableField": "enable",
         "rounded": true,
         "useThemeColors": true,
         "hideSelectedLabel": false,
+        "multilineLabel": false,
         "options": [
             {
                 "label": "0",
@@ -1339,8 +1334,8 @@
         "name": "",
         "group": "19f5ed07.08a453",
         "order": 1,
-        "width": "4",
-        "height": "2",
+        "width": "28",
+        "height": "7",
         "label": "do it properly so it works",
         "stateField": "payload",
         "enableField": "enable",
@@ -1393,8 +1388,8 @@
         "name": "",
         "group": "19f5ed07.08a453",
         "order": 1,
-        "width": "6",
-        "height": "2",
+        "width": "28",
+        "height": "7",
         "label": "do it properly so it works",
         "stateField": "payload",
         "enableField": "enable",
@@ -1441,71 +1436,6 @@
         ]
     },
     {
-        "id": "2f47f00c.b8042",
-        "type": "inject",
-        "z": "e9c32823.c6a048",
-        "name": "",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "",
-        "payloadType": "date",
-        "x": 330,
-        "y": 260,
-        "wires": [
-            [
-                "94b8caa4.e42ab8"
-            ]
-        ]
-    },
-    {
-        "id": "94b8caa4.e42ab8",
-        "type": "function",
-        "z": "e9c32823.c6a048",
-        "name": "",
-        "func": "var testtable = [];\ntesttable[0] = 32455.6;\ntesttable[20] = 31399.6;\ntesttable[40] = 31299.5;\n\ntesttable[359] = 30100.0;\n                 588069.7\n\nvar sum = testtable.reduce((a, b) => a + b, 0)\n\nmsg.payload = sum;\nreturn msg;",
-        "outputs": 1,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 600,
-        "y": 260,
-        "wires": [
-            [
-                "eda574ac.c68238"
-            ]
-        ]
-    },
-    {
-        "id": "eda574ac.c68238",
-        "type": "debug",
-        "z": "e9c32823.c6a048",
-        "name": "",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "true",
-        "targetType": "full",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 930,
-        "y": 260,
-        "wires": []
-    },
-    {
         "id": "910f5545.ebd228",
         "type": "debug",
         "z": "f56ccabd.7567e8",
@@ -1535,5 +1465,22 @@
                 "9581b2c8.b659d"
             ]
         ]
+    },
+    {
+        "id": "6b87bb98.c4a494",
+        "type": "debug",
+        "z": "f56ccabd.7567e8",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1220,
+        "y": 100,
+        "wires": []
     }
 ]
