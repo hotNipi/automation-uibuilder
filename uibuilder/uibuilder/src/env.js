@@ -32,7 +32,7 @@ var BaseCard = (function () {
     BaseCard.prototype.setGrowMode = function (mode) {
         this.growMode = mode;
     };
-    BaseCard.prototype.setProtocol = function (src) { };
+    BaseCard.prototype.setProtocol = function (p) { };
     BaseCard.prototype.setHeader = function (main, sub, icon) {
         if (icon) {
             var ic = document.createElement('i');
@@ -201,7 +201,7 @@ var GaugeCard = (function (_super) {
         return this.html;
     };
     GaugeCard.prototype.setProtocol = function (p) {
-        this.protocol = p;
+        this.protocol = p[0];
         COM.setProtocolFilter(this.protocol);
     };
     GaugeCard.prototype.setHeader = function (main, sub, icon) {
@@ -256,7 +256,7 @@ var DeviceControls = (function () {
         return this.html;
     };
     DeviceControls.prototype.setProtocol = function (p) {
-        this.protocol = p;
+        this.protocol = p[0];
         COM.setProtocolFilter(this.protocol);
         ClientEventDispacher.register(3, this.onDeviceUpdate, this);
     };
@@ -315,29 +315,28 @@ var DeviceControls = (function () {
     };
     return DeviceControls;
 }());
-var ControllerCard = (function (_super) {
-    __extends(ControllerCard, _super);
-    function ControllerCard(deviceType) {
+var DeviceCard = (function (_super) {
+    __extends(DeviceCard, _super);
+    function DeviceCard(deviceType) {
         var _this = _super.call(this) || this;
         _this.deviceType = deviceType;
         return _this;
     }
-    ControllerCard.prototype.dispose = function () {
+    DeviceCard.prototype.dispose = function () {
         this.content.dispose();
         this.content = null;
         this.header = null;
-        this.html = null;
         _super.prototype.dispose.call(this);
     };
-    ControllerCard.prototype.setProtocol = function (src) {
-        this.content.setProtocol(src);
+    DeviceCard.prototype.setProtocol = function (p) {
+        this.content.setProtocol(p);
     };
-    ControllerCard.prototype.setHeader = function (main, sub, icon) {
+    DeviceCard.prototype.setHeader = function (main, sub, icon) {
         _super.prototype.setHeader.call(this, main, sub, icon);
         this.header.innerHTML = main;
         this.subheader.innerHTML = sub;
     };
-    ControllerCard.prototype.iconsState = function (state) {
+    DeviceCard.prototype.iconsState = function (state) {
         if (this.deviceType == 0) {
             if (state == 'on') {
                 this.icon.classList.add('bulbshine');
@@ -369,7 +368,7 @@ var ControllerCard = (function (_super) {
             }
         }
     };
-    ControllerCard.prototype.init = function () {
+    DeviceCard.prototype.init = function () {
         _super.prototype.init.call(this);
         this.header = document.createElement('header');
         this.subheader = document.createElement('header');
@@ -380,11 +379,229 @@ var ControllerCard = (function (_super) {
         this.content = new DeviceControls(this.iconsState.bind(this));
         this.html.appendChild(this.content.getHtml());
     };
-    ControllerCard.prototype.resize = function () {
+    DeviceCard.prototype.resize = function () {
         _super.prototype.resize.call(this);
         this.content.resize(this.large);
     };
-    return ControllerCard;
+    return DeviceCard;
+}(BaseCard));
+var ConnectionStateChart = (function () {
+    function ConnectionStateChart(protocol) {
+        this.protocolList = protocol;
+    }
+    ConnectionStateChart.prototype.dispose = function () { };
+    ConnectionStateChart.prototype.getHtml = function () {
+        return this.html;
+    };
+    ConnectionStateChart.prototype.setProtocol = function (protocol) {
+        var _this = this;
+        ClientEventDispacher.register(3, this.onUpdate, this);
+        this.protocolList = protocol;
+        this.protocolList.forEach(function (p) { return _this.build(p); });
+    };
+    ConnectionStateChart.prototype.build = function (protocol) {
+        COM.setProtocolFilter(protocol);
+    };
+    ConnectionStateChart.prototype.onUpdate = function (msg) {
+        if (!this.protocolList.includes(msg.protocol)) {
+            return;
+        }
+    };
+    return ConnectionStateChart;
+}());
+var StateData = (function () {
+    function StateData(protocol) {
+        this.protocol = protocol;
+    }
+    StateData.prototype.getProtocol = function () {
+        return this.protocol;
+    };
+    StateData.prototype.getName = function () {
+        if (!this.data) {
+            return '';
+        }
+        var ret = this.data.name;
+        if (this.data.status == 'Offline') {
+            ret += ' ... ühenduseta';
+        }
+        return ret;
+    };
+    StateData.prototype.isReady = function () {
+        return this.getName() != '' && this.getValue() != 0;
+    };
+    StateData.prototype.getStatus = function () {
+        var _a;
+        return ((_a = this.data) === null || _a === void 0 ? void 0 : _a.status) != 'Offline';
+    };
+    StateData.prototype.getLink = function () {
+        var _a;
+        return ((_a = this.data) === null || _a === void 0 ? void 0 : _a.ip) || '';
+    };
+    StateData.prototype.getValue = function () {
+        var _a;
+        return ((_a = this.data) === null || _a === void 0 ? void 0 : _a.RSSI) || 0;
+    };
+    StateData.prototype.dispose = function () {
+        this.data = null;
+        this.protocol = null;
+    };
+    StateData.prototype.update = function (msg) {
+        this.data = msg.data;
+    };
+    return StateData;
+}());
+var ConnectionStateIcons = (function () {
+    function ConnectionStateIcons() {
+        this.timeout = -1;
+        this.startInterval = -1;
+        this.current = -1;
+        this.duration = 6000;
+        this.items = [];
+        this.isStarted = false;
+        this.init();
+    }
+    ConnectionStateIcons.prototype.dispose = function () {
+        var _this = this;
+        if (this.timeout) {
+            clearTimeout(this.timeout);
+        }
+        if (this.startInterval) {
+            clearInterval(this.startInterval);
+        }
+        ClientEventDispacher.unregister(4, this.onUpdate, this);
+        this.items.forEach(function (item) { return _this.destroy(item); });
+        while (this.html.firstChild) {
+            this.html.removeChild(this.html.lastChild);
+        }
+        this.items = null;
+        this.html = null;
+    };
+    ConnectionStateIcons.prototype.destroy = function (item) {
+        COM.removeProtocolFilter(item.getProtocol());
+        item.dispose();
+        item = null;
+    };
+    ConnectionStateIcons.prototype.getHtml = function () {
+        return this.html;
+    };
+    ConnectionStateIcons.prototype.setProtocol = function (protocol) {
+        var _this = this;
+        ClientEventDispacher.register(4, this.onUpdate, this);
+        this.protocolList = protocol;
+        this.protocolList.forEach(function (p) { return _this.build(p); });
+        this.startInterval = setInterval(this.tryToStart.bind(this), 100);
+    };
+    ConnectionStateIcons.prototype.init = function () {
+        this.html = document.createElement('div');
+        this.html.className = 'wifistate';
+        this.icon = document.createElement('i');
+        this.icon.className = 'fa fa-wifi wifilevelicon good';
+        this.html.appendChild(this.icon);
+        this.valueField = document.createElement('span');
+        this.valueField.className = 'value';
+        this.html.appendChild(this.valueField);
+        this.unitField = document.createElement('span');
+        this.unitField.className = 'unit';
+        this.html.appendChild(this.unitField);
+        this.nameField = document.createElement('span');
+        this.nameField.className = 'name';
+        this.html.appendChild(this.nameField);
+        this.html.addEventListener('click', this.onClick.bind(this));
+    };
+    ConnectionStateIcons.prototype.build = function (protocol) {
+        COM.setProtocolFilter(protocol);
+        var item = new StateData(protocol);
+        this.items.push(item);
+    };
+    ConnectionStateIcons.prototype.tryToStart = function () {
+        if (!this.items) {
+            return;
+        }
+        if (this.items.length == 0) {
+            return;
+        }
+        if (this.items[0].isReady()) {
+            this.isStarted = true;
+            clearInterval(this.startInterval);
+            this.showNext();
+        }
+    };
+    ConnectionStateIcons.prototype.showNext = function () {
+        this.current++;
+        if (this.current == this.items.length) {
+            this.current = 0;
+        }
+        this.show(this.current);
+        var scope = this;
+        this.timeout = setTimeout(function () {
+            scope.showNext();
+        }, this.duration);
+    };
+    ConnectionStateIcons.prototype.show = function (i) {
+        var val = this.items[i].getValue();
+        this.valueField.innerText = val.toString();
+        this.nameField.innerText = this.items[i].getName();
+        this.unitField.innerText = 'RSSI';
+        this.icon.classList.remove('poor', 'good', 'bad');
+        var c = !this.items[i].getStatus()
+            ? 'bad'
+            : val > 20
+                ? 'good'
+                : val > 10
+                    ? 'poor'
+                    : 'bad';
+        this.icon.classList.add(c);
+    };
+    ConnectionStateIcons.prototype.onClick = function () {
+        if (!this.items) {
+            return;
+        }
+        window.open('http://' + this.items[this.current].getLink());
+    };
+    ConnectionStateIcons.prototype.onUpdate = function (msg) {
+        if (!this.protocolList.includes(msg.protocol)) {
+            return;
+        }
+        var item = this.items.find(function (i) { return i.getProtocol() == msg.protocol; });
+        item.update(msg);
+    };
+    return ConnectionStateIcons;
+}());
+var ConnectionStateCard = (function (_super) {
+    __extends(ConnectionStateCard, _super);
+    function ConnectionStateCard() {
+        return _super.call(this) || this;
+    }
+    ConnectionStateCard.prototype.dispose = function () {
+        this.content.dispose();
+        this.content = null;
+        this.header = null;
+        _super.prototype.dispose.call(this);
+    };
+    ConnectionStateCard.prototype.setProtocol = function (p) {
+        this.content.setProtocol(p);
+    };
+    ConnectionStateCard.prototype.setHeader = function (main, sub, icon) {
+        _super.prototype.setHeader.call(this, main, sub, icon);
+        this.header.innerHTML = main;
+        this.subheader.innerHTML = sub;
+    };
+    ConnectionStateCard.prototype.iconsState = function (state) { };
+    ConnectionStateCard.prototype.init = function () {
+        _super.prototype.init.call(this);
+        this.header = document.createElement('header');
+        this.subheader = document.createElement('header');
+        this.subheader.className = 'subheader';
+        this.head.appendChild(this.header);
+        this.head.appendChild(this.subheader);
+        this.html.appendChild(this.head);
+        this.content = new ConnectionStateIcons();
+        this.html.appendChild(this.content.getHtml());
+    };
+    ConnectionStateCard.prototype.resize = function () {
+        _super.prototype.resize.call(this);
+    };
+    return ConnectionStateCard;
 }(BaseCard));
 var DefaultView = (function () {
     function DefaultView(root) {
@@ -398,7 +615,7 @@ var DefaultView = (function () {
                 icon: 'fa fa-thermometer',
                 type: 1,
                 grow: "large",
-                protocol: "sonoff-saun.DS18B20.Temperature",
+                protocol: ["sonoff-saun.DS18B20.Temperature"],
                 options: { min: 15, max: 100, color: '#007800', unit: '°C', image: 'images/saun.jpg' },
                 layout: false,
             },
@@ -408,7 +625,7 @@ var DefaultView = (function () {
                 icon: 'fa fa-thermometer',
                 type: 1,
                 grow: "large",
-                protocol: "sonoff-floorheating-temps.DS18B20-5.Temperature",
+                protocol: ["sonoff-floorheating-temps.DS18B20-5.Temperature"],
                 options: { min: 15, max: 30, color: '#007800', unit: '°C', image: 'images/eesruum.jpg' },
             },
             {
@@ -417,7 +634,7 @@ var DefaultView = (function () {
                 icon: 'fa fa-tint',
                 type: 1,
                 grow: "large",
-                protocol: "sonoff-saun.AM2301.Humidity",
+                protocol: ["sonoff-saun.AM2301.Humidity"],
                 options: {
                     min: 30,
                     max: 100,
@@ -432,7 +649,7 @@ var DefaultView = (function () {
                 icon: 'fa fa-thermometer',
                 type: 1,
                 grow: "large",
-                protocol: "sonoff-th-wc.AM2301.Temperature",
+                protocol: ["sonoff-th-wc.AM2301.Temperature"],
                 options: { min: 15, max: 30, color: '#007800', unit: '°C', image: 'images/vannituba.jpg' },
             },
             {
@@ -441,7 +658,7 @@ var DefaultView = (function () {
                 icon: 'fa fa-tint',
                 type: 1,
                 grow: "large",
-                protocol: "sonoff-th-wc.AM2301.Humidity",
+                protocol: ["sonoff-th-wc.AM2301.Humidity"],
                 options: {
                     min: 30,
                     max: 100,
@@ -456,7 +673,7 @@ var DefaultView = (function () {
                 icon: 'fa fa-thermometer',
                 type: 1,
                 grow: "large",
-                protocol: "sonoff-floorheating-temps.DS18B20-2.Temperature",
+                protocol: ["sonoff-floorheating-temps.DS18B20-2.Temperature"],
                 options: { min: 18, max: 30, color: '#770099', unit: '°C', image: 'images/pk-pealevool.jpg' },
             },
             {
@@ -465,7 +682,7 @@ var DefaultView = (function () {
                 icon: 'fa fa-thermometer',
                 type: 1,
                 grow: "large",
-                protocol: "sonoff-floorheating-temps.DS18B20-1.Temperature",
+                protocol: ["sonoff-floorheating-temps.DS18B20-1.Temperature"],
                 options: {
                     min: 18,
                     max: 30,
@@ -480,7 +697,7 @@ var DefaultView = (function () {
                 icon: 'fa fa-thermometer',
                 type: 1,
                 grow: "large",
-                protocol: "sonoff-floorheating-temps.DS18B20-4.Temperature",
+                protocol: ["sonoff-floorheating-temps.DS18B20-4.Temperature"],
                 options: { min: 18, max: 50, unit: '°C', image: 'images/lisa-peale.jpg' },
             },
             {
@@ -489,7 +706,7 @@ var DefaultView = (function () {
                 icon: 'fa fa-thermometer',
                 type: 1,
                 grow: "large",
-                protocol: "sonoff-floorheating-temps.DS18B20-3.Temperature",
+                protocol: ["sonoff-floorheating-temps.DS18B20-3.Temperature"],
                 options: { min: 18, max: 50, unit: '°C', image: 'images/lisa-tagasi.jpg' },
             },
             {
@@ -499,7 +716,7 @@ var DefaultView = (function () {
                 type: 2,
                 grow: "wide",
                 deviceType: 0,
-                protocol: "tvbacklight",
+                protocol: ["tvbacklight"],
             },
             {
                 label: 'Võimendi',
@@ -508,7 +725,7 @@ var DefaultView = (function () {
                 type: 2,
                 grow: "wide",
                 deviceType: 3,
-                protocol: "amplifier",
+                protocol: ["amplifier"],
             },
             {
                 label: 'Mini ventilaatorid',
@@ -517,7 +734,7 @@ var DefaultView = (function () {
                 type: 2,
                 grow: "wide",
                 deviceType: 1,
-                protocol: "minivent",
+                protocol: ["minivent"],
             },
             {
                 label: 'Ventilaator',
@@ -526,7 +743,7 @@ var DefaultView = (function () {
                 type: 2,
                 grow: "wide",
                 deviceType: 1,
-                protocol: "vent",
+                protocol: ["vent"],
             },
             {
                 label: 'Köögi töövalgus',
@@ -535,7 +752,7 @@ var DefaultView = (function () {
                 type: 2,
                 grow: "wide",
                 deviceType: 0,
-                protocol: "kitchenworklight",
+                protocol: ["kitchenworklight"],
             },
             {
                 label: 'Köögi õhtuvalgus',
@@ -544,7 +761,7 @@ var DefaultView = (function () {
                 type: 2,
                 grow: "wide",
                 deviceType: 0,
-                protocol: "kitchentoplight",
+                protocol: ["kitchentoplight"],
             },
             {
                 label: 'Voodi õhtuvalgus',
@@ -553,7 +770,27 @@ var DefaultView = (function () {
                 type: 2,
                 grow: "wide",
                 deviceType: 0,
-                protocol: "bedunderlight",
+                protocol: ["bedunderlight"],
+            },
+            {
+                label: 'WIFI',
+                sublabel: 'Seadmete ühendus',
+                icon: 'fa fa-wifi',
+                type: 3,
+                grow: "large",
+                protocol: [
+                    "sonoff-amp.connection",
+                    "sonoff-backlight.connection",
+                    "sonoff-bed.connection",
+                    "sonoff-extraheat.connection",
+                    "sonoff-floorheating-temps.connection",
+                    "sonoff-kitchen-shelf.connection",
+                    "sonoff-saun.connection",
+                    "sonoff-socket.connection",
+                    "sonoff-tempreg.connection",
+                    "sonoff-th-wc.connection",
+                    "sonoff-pesumasin.connection",
+                ],
             },
         ];
         for (var i = 0; i < cards.length; i++) {
@@ -566,7 +803,11 @@ var DefaultView = (function () {
                     break;
                 }
                 case 2: {
-                    card = new ControllerCard(c.deviceType);
+                    card = new DeviceCard(c.deviceType);
+                    break;
+                }
+                case 3: {
+                    card = new ConnectionStateCard();
                     break;
                 }
             }
@@ -651,6 +892,10 @@ var Communcator = (function () {
             this.toDeviceEvent(msg);
             return;
         }
+        if (msg.topic == "controllerConnection") {
+            this.toControllerConnectionEvent(msg);
+            return;
+        }
     };
     Communcator.prototype.out = function (msg) {
         if (!this.connected) {
@@ -681,6 +926,14 @@ var Communcator = (function () {
             state: m.payload.state,
             auto: m.payload.auto,
             lastupdate: m.payload.lastupdate,
+        };
+        ClientEventDispacher.dispatch(u);
+    };
+    Communcator.prototype.toControllerConnectionEvent = function (m) {
+        var u = {
+            type: 4,
+            protocol: m.protocol,
+            data: m.payload,
         };
         ClientEventDispacher.dispatch(u);
     };

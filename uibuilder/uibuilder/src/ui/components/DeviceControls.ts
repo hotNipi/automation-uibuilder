@@ -32,8 +32,8 @@ class DeviceControls {
 	getHtml(): HTMLDivElement {
 		return this.html;
 	}
-	setProtocol(p: Protocol): void {
-		this.protocol = p;
+	setProtocol(p: Protocol[]): void {
+		this.protocol = p[0];
 		COM.setProtocolFilter(this.protocol);
 		ClientEventDispacher.register(ClientEvents.DeviceUpdate, this.onDeviceUpdate, this);
 	}

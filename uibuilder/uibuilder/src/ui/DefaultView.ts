@@ -1,7 +1,8 @@
 /// <reference path="cards/ICard.ts" />
 /// <reference path="cards/BaseCard.ts"/>
 /// <reference path="cards/GaugeCard.ts" />
-/// <reference path="cards/ControllerCard.ts" />
+/// <reference path="cards/DeviceCard.ts" />
+/// <reference path="cards/ConnectionStateCard.ts" />
 
 class DefaultView implements IView {
 	private root: HTMLDivElement;
@@ -16,7 +17,7 @@ class DefaultView implements IView {
 				icon: 'fa fa-thermometer',
 				type: Cards.GaugeCard,
 				grow: GrowMode.Both,
-				protocol: Protocol.SaunaTemp,
+				protocol: [Protocol.SaunaTemp],
 				options: {min: 15, max: 100, color: '#007800', unit: '°C', image: 'images/saun.jpg'},
 				layout: false,
 			},
@@ -27,7 +28,7 @@ class DefaultView implements IView {
 				icon: 'fa fa-thermometer',
 				type: Cards.GaugeCard,
 				grow: GrowMode.Both,
-				protocol: Protocol.LobbyTemp,
+				protocol: [Protocol.LobbyTemp],
 				options: {min: 15, max: 30, color: '#007800', unit: '°C', image: 'images/eesruum.jpg'},
 			},
 			{
@@ -36,7 +37,7 @@ class DefaultView implements IView {
 				icon: 'fa fa-tint',
 				type: Cards.GaugeCard,
 				grow: GrowMode.Both,
-				protocol: Protocol.SaunaHum,
+				protocol: [Protocol.SaunaHum],
 				options: {
 					min: 30,
 					max: 100,
@@ -51,7 +52,7 @@ class DefaultView implements IView {
 				icon: 'fa fa-thermometer',
 				type: Cards.GaugeCard,
 				grow: GrowMode.Both,
-				protocol: Protocol.BathroomTemp,
+				protocol: [Protocol.BathroomTemp],
 				options: {min: 15, max: 30, color: '#007800', unit: '°C', image: 'images/vannituba.jpg'},
 			},
 			{
@@ -60,7 +61,7 @@ class DefaultView implements IView {
 				icon: 'fa fa-tint',
 				type: Cards.GaugeCard,
 				grow: GrowMode.Both,
-				protocol: Protocol.BathroomHum,
+				protocol: [Protocol.BathroomHum],
 				options: {
 					min: 30,
 					max: 100,
@@ -76,7 +77,7 @@ class DefaultView implements IView {
 				icon: 'fa fa-thermometer',
 				type: Cards.GaugeCard,
 				grow: GrowMode.Both,
-				protocol: Protocol.FloorHeatSupply,
+				protocol: [Protocol.FloorHeatSupply],
 				options: {min: 18, max: 30, color: '#770099', unit: '°C', image: 'images/pk-pealevool.jpg'},
 			},
 			{
@@ -85,7 +86,7 @@ class DefaultView implements IView {
 				icon: 'fa fa-thermometer',
 				type: Cards.GaugeCard,
 				grow: GrowMode.Both,
-				protocol: Protocol.FloorHeatReturn,
+				protocol: [Protocol.FloorHeatReturn],
 				options: {
 					min: 18,
 					max: 30,
@@ -100,7 +101,7 @@ class DefaultView implements IView {
 				icon: 'fa fa-thermometer',
 				type: Cards.GaugeCard,
 				grow: GrowMode.Both,
-				protocol: Protocol.ExtrHeatSupply,
+				protocol: [Protocol.ExtrHeatSupply],
 				options: {min: 18, max: 50, unit: '°C', image: 'images/lisa-peale.jpg'},
 			},
 			{
@@ -109,71 +110,91 @@ class DefaultView implements IView {
 				icon: 'fa fa-thermometer',
 				type: Cards.GaugeCard,
 				grow: GrowMode.Both,
-				protocol: Protocol.ExtraHeatReturn,
+				protocol: [Protocol.ExtraHeatReturn],
 				options: {min: 18, max: 50, unit: '°C', image: 'images/lisa-tagasi.jpg'},
 			},
 			{
 				label: 'Taustvalgus',
 				sublabel: 'Televiisori taustvalgus',
 				icon: 'fa fa-lightbulb-o',
-				type: Cards.ControllerCard,
+				type: Cards.DeviceCard,
 				grow: GrowMode.Width,
 				deviceType: DeviceType.Light,
-				protocol: Protocol.TvBackLight,
+				protocol: [Protocol.TvBackLight],
 			},
 			{
 				label: 'Võimendi',
 				sublabel: 'Puhkeruumi sound',
 				icon: 'fa fa-music',
-				type: Cards.ControllerCard,
+				type: Cards.DeviceCard,
 				grow: GrowMode.Width,
 				deviceType: DeviceType.Sound,
-				protocol: Protocol.Amplifier,
+				protocol: [Protocol.Amplifier],
 			},
 			{
 				label: 'Mini ventilaatorid',
 				sublabel: 'Puhkeruumi õhuringlus',
 				icon: 'fa fa-crosshairs',
-				type: Cards.ControllerCard,
+				type: Cards.DeviceCard,
 				grow: GrowMode.Width,
 				deviceType: DeviceType.Vent,
-				protocol: Protocol.MiniVent,
+				protocol: [Protocol.MiniVent],
 			},
 			{
 				label: 'Ventilaator',
 				sublabel: 'Väljatõmbe ventilaator',
 				icon: 'fa fa-crosshairs',
-				type: Cards.ControllerCard,
+				type: Cards.DeviceCard,
 				grow: GrowMode.Width,
 				deviceType: DeviceType.Vent,
-				protocol: Protocol.Vent,
+				protocol: [Protocol.Vent],
 			},
 			{
 				label: 'Köögi töövalgus',
 				sublabel: 'Tööpinna valgusti',
 				icon: 'fa fa-lightbulb-o',
-				type: Cards.ControllerCard,
+				type: Cards.DeviceCard,
 				grow: GrowMode.Width,
 				deviceType: DeviceType.Light,
-				protocol: Protocol.KitchenWorkLight,
+				protocol: [Protocol.KitchenWorkLight],
 			},
 			{
 				label: 'Köögi õhtuvalgus',
 				sublabel: 'Meeleolu valgustid',
 				icon: 'fa fa-lightbulb-o',
-				type: Cards.ControllerCard,
+				type: Cards.DeviceCard,
 				grow: GrowMode.Width,
 				deviceType: DeviceType.Light,
-				protocol: Protocol.KitchenTopLight,
+				protocol: [Protocol.KitchenTopLight],
 			},
 			{
 				label: 'Voodi õhtuvalgus',
 				sublabel: 'Meeleolu valgustid',
 				icon: 'fa fa-lightbulb-o',
-				type: Cards.ControllerCard,
+				type: Cards.DeviceCard,
 				grow: GrowMode.Width,
 				deviceType: DeviceType.Light,
-				protocol: Protocol.BedUnderLight,
+				protocol: [Protocol.BedUnderLight],
+			},
+			{
+				label: 'WIFI',
+				sublabel: 'Seadmete ühendus',
+				icon: 'fa fa-wifi',
+				type: Cards.ConnectionStateCard,
+				grow: GrowMode.Both,
+				protocol: [
+					Protocol.SonoffAmpConnection,
+					Protocol.SonoffBackLightConnection,
+					Protocol.SonoffBedConnection,
+					Protocol.SonoffExtraHeatConnection,
+					Protocol.SonoffFloorHeatingTempsConnection,
+					Protocol.SonoffKitchenShelfConnection,
+					Protocol.SonoffSaunConnection,
+					Protocol.SonoffSocketConnction,
+					Protocol.SonoffTempRegConnection,
+					Protocol.SonoffThWcConnection,
+					Protocol.SonoffWashingMashineConnection,
+				],
 			},
 		];
 
@@ -192,8 +213,12 @@ class DefaultView implements IView {
 					);
 					break;
 				}
-				case Cards.ControllerCard: {
-					card = new ControllerCard(c.deviceType);
+				case Cards.DeviceCard: {
+					card = new DeviceCard(c.deviceType);
+					break;
+				}
+				case Cards.ConnectionStateCard: {
+					card = new ConnectionStateCard();
 					break;
 				}
 			}

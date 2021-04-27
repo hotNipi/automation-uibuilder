@@ -15,6 +15,9 @@
 	--d7: hsl(0, 10%, 20%);
 	--d8: hsl(0, 10%, 20%);
 	--d9: hsl(0, 10%, 22%);
+	--good: var(--btn-0);
+	--poor: hsl(39, 76%, 52%);
+	--bad: hsl(0, 70%, 52%);
 }
 p {
 	margin: 0;
@@ -33,12 +36,21 @@ body {
 }
 @keyframes rotation {
 	from {
-	  transform: rotate(0deg);
+		transform: rotate(0deg);
 	}
 	to {
-	  transform: rotate(359deg);
+		transform: rotate(359deg);
 	}
-  }
-  .rotate {
+}
+.rotate {
 	animation: rotation 1s infinite linear;
-  }
+}
+.good {
+	color: var(--good);
+}
+.bad {
+	color: var(--bad);
+}
+.poor {
+	color: var(--poor);
+}

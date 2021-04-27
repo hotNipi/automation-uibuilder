@@ -4,6 +4,20 @@ const enum ClientEvents {
 	Disconnected,
 	SensorUpdate,
 	DeviceUpdate,
+	ControllerConnection,
+}
+interface ControllerConnection {
+	type: ClientEvents.ControllerConnection;
+	protocol: Protocol;
+	data: ControllerConnectionData;
+}
+
+interface ControllerConnectionData {
+	status: string;
+	ip: string;
+	ap: string;
+	RSSI: number;
+	name: string;
 }
 interface SensorUpdate {
 	type: ClientEvents.SensorUpdate;

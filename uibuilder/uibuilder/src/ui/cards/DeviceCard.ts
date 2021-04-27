@@ -1,5 +1,5 @@
 /// <reference path="../components/DeviceControls.ts" />
-class ControllerCard extends BaseCard implements ICard {
+class DeviceCard extends BaseCard implements ICard {
 	private content: DeviceControls;
 	private header: HTMLElement;
 	protected deviceType: DeviceType;
@@ -14,12 +14,11 @@ class ControllerCard extends BaseCard implements ICard {
 		this.content.dispose();
 		this.content = null;
 		this.header = null;
-		this.html = null;
 		super.dispose();
 	}
 
-	setProtocol(src: Protocol): void {
-		this.content.setProtocol(src);
+	setProtocol(p: Protocol[]): void {
+		this.content.setProtocol(p);
 	}
 	setHeader(main: string, sub?: string, icon?: string): void {
 		super.setHeader(main, sub, icon);

@@ -15,6 +15,9 @@
   --d7: hsl(0, 10%, 20%);
   --d8: hsl(0, 10%, 20%);
   --d9: hsl(0, 10%, 22%);
+  --good: var(--btn-0);
+  --poor: hsl(39, 76%, 52%);
+  --bad: hsl(0, 70%, 52%);
 }
 p {
   margin: 0;
@@ -41,6 +44,15 @@ body {
 }
 .rotate {
   animation: rotation 1s infinite linear;
+}
+.good {
+  color: var(--good);
+}
+.bad {
+  color: var(--bad);
+}
+.poor {
+  color: var(--poor);
 }
 .card {
   position: relative;
@@ -273,4 +285,37 @@ button:hover {
 }
 .hidden {
   display: none;
+}
+.wifistate {
+  position: relative;
+  text-align: center;
+  margin: auto 0;
+  user-select: none;
+}
+.wifistate .value {
+  font-size: 2rem;
+  padding-left: 0.2em;
+  color: var(--lightText);
+  transition: all 2s;
+  cursor: pointer;
+}
+.wifistate .name {
+  display: block;
+  font-size: 1rem;
+  opacity: 0.5;
+  color: var(--lightText);
+  cursor: pointer;
+}
+.wifistate .unit {
+  position: relative;
+  bottom: 0.5em;
+  font-size: 0.7rem;
+  padding-left: 0.4em;
+  vertical-align: super;
+  color: var(--lightText);
+  cursor: pointer;
+}
+.wifilevelicon {
+  font-size: 1.6rem;
+  cursor: pointer;
 }

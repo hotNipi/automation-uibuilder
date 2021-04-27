@@ -20,8 +20,8 @@ class GaugeCard extends BaseCard implements IGaugeCard {
 	getHTML(): HTMLDivElement {
 		return this.html;
 	}
-	setProtocol(p: Protocol): void {
-		this.protocol = p;
+	setProtocol(p: Protocol[]): void {
+		this.protocol = p[0];
 		COM.setProtocolFilter(this.protocol);
 	}
 

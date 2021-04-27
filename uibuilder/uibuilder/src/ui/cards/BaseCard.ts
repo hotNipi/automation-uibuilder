@@ -22,7 +22,7 @@ class BaseCard implements ICard {
 	setGrowMode(mode: GrowMode): void {
 		this.growMode = mode;
 	}
-	setProtocol(src: string): void {}
+	setProtocol(p: Protocol[]): void {}
 	setHeader(main: string, sub?: string, icon?: string): void {
 		if (icon) {
 			var ic = document.createElement('i');

@@ -59,6 +59,11 @@ class Communcator implements COM {
 			this.toDeviceEvent(msg);
 			return;
 		}
+		if (msg.topic == NodeRedMessage.ControllerConnection) {
+			//console.log('[COM]in:', msg);
+			this.toControllerConnectionEvent(msg);
+			return;
+		}
 	}
 	out(msg: any): void {
 		if (!this.connected) {
@@ -91,6 +96,14 @@ class Communcator implements COM {
 			state: m.payload.state,
 			auto: m.payload.auto,
 			lastupdate: m.payload.lastupdate,
+		};
+		ClientEventDispacher.dispatch(u);
+	}
+	private toControllerConnectionEvent(m: any): void {
+		var u: ControllerConnection = {
+			type: ClientEvents.ControllerConnection,
+			protocol: m.protocol,
+			data: m.payload,
 		};
 		ClientEventDispacher.dispatch(u);
 	}

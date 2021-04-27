@@ -2,7 +2,7 @@ interface ICard {
 	setGrowMode(grow: GrowMode): void;
 	getHTML(): HTMLDivElement;
 	setHeader: (main: string, sub?: string, icon?: string) => void;
-	setProtocol: (src: string) => void;
+	setProtocol: (protocol: Protocol[]) => void;
 	dispose: () => void;
 }
 interface IGaugeCard extends ICard {
@@ -12,7 +12,8 @@ interface IControllerCard extends ICard {}
 const enum Cards {
 	DfaultCard,
 	GaugeCard,
-	ControllerCard,
+	DeviceCard,
+	ConnectionStateCard,
 }
 const enum DeviceType {
 	Light,
