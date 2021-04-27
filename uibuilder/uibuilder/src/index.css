@@ -54,6 +54,15 @@ body {
 .poor {
   color: var(--poor);
 }
+.good-bg {
+  background-color: var(--good);
+}
+.bad-bg {
+  background-color: var(--bad);
+}
+.poor-bg {
+  background-color: var(--poor);
+}
 .card {
   position: relative;
   background: var(--d2);
@@ -137,7 +146,7 @@ body {
   padding-left: 0.6em;
   position: relative;
   top: -2px;
-  opacity: 0.5;
+  opacity: 0.75;
 }
 .card.large header {
   font-size: 2em;
@@ -170,7 +179,7 @@ body {
   padding-left: 1em;
   padding-bottom: 0.4em;
   color: var(--lightText);
-  opacity: 0.5;
+  opacity: 0.75;
   display: none;
 }
 .fillgauge {
@@ -296,13 +305,12 @@ button:hover {
   font-size: 2rem;
   padding-left: 0.2em;
   color: var(--lightText);
-  transition: all 2s;
   cursor: pointer;
 }
 .wifistate .name {
   display: block;
   font-size: 1rem;
-  opacity: 0.5;
+  opacity: 0.75;
   color: var(--lightText);
   cursor: pointer;
 }
@@ -318,4 +326,35 @@ button:hover {
 .wifilevelicon {
   font-size: 1.6rem;
   cursor: pointer;
+}
+.wifichart {
+  user-select: none;
+  margin: auto 1em;
+}
+.chartrow {
+  font-size: 0.8rem;
+  color: var(--lightText);
+  display: grid;
+  grid-template-columns: 2.5fr 7fr 1fr;
+}
+.rowname {
+  grid-column: 1 / 2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-right: 1em;
+  text-align: end;
+  opacity: 0.75;
+}
+.rowline {
+  grid-column: 2 / 3;
+  margin-top: 4px;
+  margin-bottom: 3px;
+  transition: width 1.5s ease-in-out;
+}
+.rowvalue {
+  grid-column: 3 / 4;
+  text-align: start;
+  padding-left: 1em;
+  opacity: 0.75;
 }

@@ -386,26 +386,75 @@ var DeviceCard = (function (_super) {
     return DeviceCard;
 }(BaseCard));
 var ConnectionStateChart = (function () {
-    function ConnectionStateChart(protocol) {
+    function ConnectionStateChart(getItem, getCount, protocol) {
         this.protocolList = protocol;
+        this.getCount = getCount;
+        this.getItem = getItem;
+        this.init();
     }
-    ConnectionStateChart.prototype.dispose = function () { };
+    ConnectionStateChart.prototype.dispose = function () {
+        while (this.html.firstChild) {
+            this.html.removeChild(this.html.lastChild);
+        }
+        this.getCount = null;
+        this.getItem = null;
+        this.html = null;
+    };
     ConnectionStateChart.prototype.getHtml = function () {
         return this.html;
     };
-    ConnectionStateChart.prototype.setProtocol = function (protocol) {
-        var _this = this;
-        ClientEventDispacher.register(3, this.onUpdate, this);
-        this.protocolList = protocol;
-        this.protocolList.forEach(function (p) { return _this.build(p); });
+    ConnectionStateChart.prototype.update = function (p) {
+        var item = this.getItem(p);
+        var e = document.getElementById('line_' + p);
+        e.style.width = item.getValue() + '%';
+        e.classList.remove('good-bg', 'poor-bg', 'bad-bg');
+        var c = !item.getStatus()
+            ? 'bad-bg'
+            : item.getValue() > 20
+                ? 'good-bg'
+                : item.getValue() > 10
+                    ? 'poor-bg'
+                    : 'bad-bg';
+        e.classList.add(c);
+        e = document.getElementById('value_' + item.getProtocol());
+        e.innerText = item.getValue().toString();
     };
-    ConnectionStateChart.prototype.build = function (protocol) {
-        COM.setProtocolFilter(protocol);
-    };
-    ConnectionStateChart.prototype.onUpdate = function (msg) {
-        if (!this.protocolList.includes(msg.protocol)) {
-            return;
+    ConnectionStateChart.prototype.init = function () {
+        this.html = document.createElement('div');
+        this.html.className = 'wifichart';
+        for (var i = 0; i < this.getCount(); i++) {
+            var item = this.getItem(this.protocolList[i]);
+            var row = document.createElement('div');
+            row.className = 'chartrow';
+            this.html.appendChild(row);
+            var node = document.createElement('div');
+            node.className = 'rowname';
+            node.innerText = item.getName();
+            row.appendChild(node);
+            node = document.createElement('div');
+            node.className = 'rowline';
+            node.setAttribute('id', 'line_' + item.getProtocol());
+            node.style.width = 0 + '%';
+            var c = !item.getStatus()
+                ? 'bad-bg'
+                : item.getValue() > 20
+                    ? 'good-bg'
+                    : item.getValue() > 10
+                        ? 'poor-bg'
+                        : 'bad-bg';
+            node.classList.add(c);
+            row.appendChild(node);
+            node = document.createElement('div');
+            node.className = 'rowvalue';
+            node.setAttribute('id', 'value_' + item.getProtocol());
+            node.innerText = item.getValue().toString();
+            row.appendChild(node);
         }
+        setTimeout(this.updateAll.bind(this), 100);
+    };
+    ConnectionStateChart.prototype.updateAll = function () {
+        var _this = this;
+        this.protocolList.forEach(function (p) { return _this.update(p); });
     };
     return ConnectionStateChart;
 }());
@@ -451,45 +500,30 @@ var StateData = (function () {
     return StateData;
 }());
 var ConnectionStateIcons = (function () {
-    function ConnectionStateIcons() {
+    function ConnectionStateIcons(getItemFromIndex, getCount) {
         this.timeout = -1;
         this.startInterval = -1;
         this.current = -1;
         this.duration = 6000;
-        this.items = [];
-        this.isStarted = false;
+        this.getCount = getCount;
+        this.getItem = getItemFromIndex;
         this.init();
     }
     ConnectionStateIcons.prototype.dispose = function () {
-        var _this = this;
         if (this.timeout) {
             clearTimeout(this.timeout);
         }
         if (this.startInterval) {
             clearInterval(this.startInterval);
         }
-        ClientEventDispacher.unregister(4, this.onUpdate, this);
-        this.items.forEach(function (item) { return _this.destroy(item); });
         while (this.html.firstChild) {
             this.html.removeChild(this.html.lastChild);
         }
-        this.items = null;
+        this.current = -1;
         this.html = null;
-    };
-    ConnectionStateIcons.prototype.destroy = function (item) {
-        COM.removeProtocolFilter(item.getProtocol());
-        item.dispose();
-        item = null;
     };
     ConnectionStateIcons.prototype.getHtml = function () {
         return this.html;
-    };
-    ConnectionStateIcons.prototype.setProtocol = function (protocol) {
-        var _this = this;
-        ClientEventDispacher.register(4, this.onUpdate, this);
-        this.protocolList = protocol;
-        this.protocolList.forEach(function (p) { return _this.build(p); });
-        this.startInterval = setInterval(this.tryToStart.bind(this), 100);
     };
     ConnectionStateIcons.prototype.init = function () {
         this.html = document.createElement('div');
@@ -507,28 +541,21 @@ var ConnectionStateIcons = (function () {
         this.nameField.className = 'name';
         this.html.appendChild(this.nameField);
         this.html.addEventListener('click', this.onClick.bind(this));
-    };
-    ConnectionStateIcons.prototype.build = function (protocol) {
-        COM.setProtocolFilter(protocol);
-        var item = new StateData(protocol);
-        this.items.push(item);
+        this.startInterval = setInterval(this.tryToStart.bind(this), 100);
     };
     ConnectionStateIcons.prototype.tryToStart = function () {
-        if (!this.items) {
+        var item = this.getItem(0);
+        if (!item) {
             return;
         }
-        if (this.items.length == 0) {
-            return;
-        }
-        if (this.items[0].isReady()) {
-            this.isStarted = true;
+        if (item.isReady()) {
             clearInterval(this.startInterval);
             this.showNext();
         }
     };
     ConnectionStateIcons.prototype.showNext = function () {
         this.current++;
-        if (this.current == this.items.length) {
+        if (this.current == this.getCount()) {
             this.current = 0;
         }
         this.show(this.current);
@@ -538,55 +565,129 @@ var ConnectionStateIcons = (function () {
         }, this.duration);
     };
     ConnectionStateIcons.prototype.show = function (i) {
-        var val = this.items[i].getValue();
+        var item = this.getItem(i);
+        var val = item.getValue();
         this.valueField.innerText = val.toString();
-        this.nameField.innerText = this.items[i].getName();
+        this.nameField.innerText = item.getName();
         this.unitField.innerText = 'RSSI';
         this.icon.classList.remove('poor', 'good', 'bad');
-        var c = !this.items[i].getStatus()
-            ? 'bad'
-            : val > 20
-                ? 'good'
-                : val > 10
-                    ? 'poor'
-                    : 'bad';
+        var c = !item.getStatus() ? 'bad' : val > 20 ? 'good' : val > 10 ? 'poor' : 'bad';
         this.icon.classList.add(c);
     };
     ConnectionStateIcons.prototype.onClick = function () {
-        if (!this.items) {
+        var item = this.getItem(this.current);
+        if (!item) {
             return;
         }
-        window.open('http://' + this.items[this.current].getLink());
+        window.open('http://' + item.getLink());
     };
-    ConnectionStateIcons.prototype.onUpdate = function (msg) {
+    return ConnectionStateIcons;
+}());
+var ConnectionStateController = (function () {
+    function ConnectionStateController() {
+        this.items = [];
+        this.updateSlave = null;
+    }
+    ConnectionStateController.prototype.dispose = function () {
+        var _this = this;
+        ClientEventDispacher.unregister(4, this.onUpdate, this);
+        this.items.forEach(function (item) { return _this.destroy(item); });
+        this.items = null;
+        this.protocolList = null;
+    };
+    ConnectionStateController.prototype.destroy = function (item) {
+        COM.removeProtocolFilter(item.getProtocol());
+        item.dispose();
+        item = null;
+    };
+    ConnectionStateController.prototype.setUpdateListener = function (l) {
+        this.updateSlave = l;
+    };
+    ConnectionStateController.prototype.getCount = function () {
+        var _a;
+        return ((_a = this.items) === null || _a === void 0 ? void 0 : _a.length) | 0;
+    };
+    ConnectionStateController.prototype.getItemFromIndex = function (idx) {
+        if (!this.items) {
+            return null;
+        }
+        if (this.items.length == 0) {
+            return null;
+        }
+        return this.items[idx];
+    };
+    ConnectionStateController.prototype.getItem = function (p) {
+        if (!this.items) {
+            return null;
+        }
+        if (this.items.length == 0) {
+            return null;
+        }
+        return this.items.find(function (i) { return i.getProtocol() == p; });
+    };
+    ConnectionStateController.prototype.setProtocol = function (protocol) {
+        var _this = this;
+        ClientEventDispacher.register(4, this.onUpdate, this);
+        this.protocolList = protocol;
+        this.protocolList.forEach(function (p) { return _this.build(p); });
+    };
+    ConnectionStateController.prototype.build = function (protocol) {
+        COM.setProtocolFilter(protocol);
+        var item = new StateData(protocol);
+        this.items.push(item);
+    };
+    ConnectionStateController.prototype.onUpdate = function (msg) {
         if (!this.protocolList.includes(msg.protocol)) {
             return;
         }
         var item = this.items.find(function (i) { return i.getProtocol() == msg.protocol; });
         item.update(msg);
+        if (this.updateSlave) {
+            this.updateSlave(item.getProtocol());
+        }
     };
-    return ConnectionStateIcons;
+    return ConnectionStateController;
 }());
 var ConnectionStateCard = (function (_super) {
     __extends(ConnectionStateCard, _super);
     function ConnectionStateCard() {
-        return _super.call(this) || this;
+        var _this = _super.call(this) || this;
+        _this.controller = new ConnectionStateController();
+        return _this;
     }
     ConnectionStateCard.prototype.dispose = function () {
-        this.content.dispose();
-        this.content = null;
+        this.disposeContent();
+        this.controller.setUpdateListener(null);
+        this.controller.dispose();
+        this.controller = null;
         this.header = null;
         _super.prototype.dispose.call(this);
     };
+    ConnectionStateCard.prototype.disposeContent = function () {
+        if (!this.content) {
+            return;
+        }
+        this.content.dispose();
+        this.content = null;
+    };
+    ConnectionStateCard.prototype.getItemFromIndex = function (idx) {
+        return this.controller.getItemFromIndex(idx);
+    };
+    ConnectionStateCard.prototype.getItem = function (p) {
+        return this.controller.getItem(p);
+    };
+    ConnectionStateCard.prototype.getCount = function () {
+        return this.controller.getCount();
+    };
     ConnectionStateCard.prototype.setProtocol = function (p) {
-        this.content.setProtocol(p);
+        this.controller.setProtocol(p);
+        this.protocol = p;
     };
     ConnectionStateCard.prototype.setHeader = function (main, sub, icon) {
         _super.prototype.setHeader.call(this, main, sub, icon);
         this.header.innerHTML = main;
         this.subheader.innerHTML = sub;
     };
-    ConnectionStateCard.prototype.iconsState = function (state) { };
     ConnectionStateCard.prototype.init = function () {
         _super.prototype.init.call(this);
         this.header = document.createElement('header');
@@ -595,11 +696,29 @@ var ConnectionStateCard = (function (_super) {
         this.head.appendChild(this.header);
         this.head.appendChild(this.subheader);
         this.html.appendChild(this.head);
-        this.content = new ConnectionStateIcons();
+        this.content = new ConnectionStateIcons(this.getItemFromIndex.bind(this), this.getCount.bind(this));
         this.html.appendChild(this.content.getHtml());
     };
     ConnectionStateCard.prototype.resize = function () {
         _super.prototype.resize.call(this);
+        if (this.large) {
+            if (this.content) {
+                this.html.removeChild(this.content.getHtml());
+                this.disposeContent();
+                this.content = new ConnectionStateChart(this.getItem.bind(this), this.getCount.bind(this), this.protocol);
+                this.controller.setUpdateListener(this.content.update.bind(this));
+                this.html.appendChild(this.content.getHtml());
+            }
+        }
+        else {
+            if (this.content) {
+                this.controller.setUpdateListener(null);
+                this.html.removeChild(this.content.getHtml());
+                this.disposeContent();
+            }
+            this.content = new ConnectionStateIcons(this.getItemFromIndex.bind(this), this.getCount.bind(this));
+            this.html.appendChild(this.content.getHtml());
+        }
     };
     return ConnectionStateCard;
 }(BaseCard));
@@ -609,6 +728,25 @@ var DefaultView = (function () {
     }
     DefaultView.prototype.build = function () {
         var cards = [
+            {
+                label: 'WIFI',
+                sublabel: 'Seadmete ühendus',
+                icon: 'fa fa-wifi',
+                type: 3,
+                grow: "large",
+                protocol: [
+                    "sonoff-amp.connection",
+                    "sonoff-backlight.connection",
+                    "sonoff-bed.connection",
+                    "sonoff-extraheat.connection",
+                    "sonoff-floorheating-temps.connection",
+                    "sonoff-kitchen-shelf.connection",
+                    "sonoff-saun.connection",
+                    "sonoff-tempreg.connection",
+                    "sonoff-th-wc.connection",
+                    "sonoff-pesumasin.connection",
+                ],
+            },
             {
                 label: 'saun',
                 sublabel: 'leiliruum',
@@ -772,26 +910,6 @@ var DefaultView = (function () {
                 deviceType: 0,
                 protocol: ["bedunderlight"],
             },
-            {
-                label: 'WIFI',
-                sublabel: 'Seadmete ühendus',
-                icon: 'fa fa-wifi',
-                type: 3,
-                grow: "large",
-                protocol: [
-                    "sonoff-amp.connection",
-                    "sonoff-backlight.connection",
-                    "sonoff-bed.connection",
-                    "sonoff-extraheat.connection",
-                    "sonoff-floorheating-temps.connection",
-                    "sonoff-kitchen-shelf.connection",
-                    "sonoff-saun.connection",
-                    "sonoff-socket.connection",
-                    "sonoff-tempreg.connection",
-                    "sonoff-th-wc.connection",
-                    "sonoff-pesumasin.connection",
-                ],
-            },
         ];
         for (var i = 0; i < cards.length; i++) {
             var card = void 0;
@@ -869,6 +987,13 @@ var Communcator = (function () {
             this.protocolfilter.splice(index, 1);
         }
     };
+    Communcator.prototype.sendProtocolFilter = function () {
+        this.out({
+            topic: "protocolFilter",
+            protocol: "node-red.protocol",
+            payload: this.protocolfilter,
+        });
+    };
     Communcator.prototype.in = function (msg) {
         if (!msg.protocol) {
             return;
@@ -877,11 +1002,7 @@ var Communcator = (function () {
             return;
         }
         if (msg.topic == "protocolFilter") {
-            this.out({
-                topic: "protocolFilter",
-                protocol: "node-red.protocol",
-                payload: this.protocolfilter,
-            });
+            this.sendProtocolFilter();
             return;
         }
         if (msg.topic == "sensorUpdate") {

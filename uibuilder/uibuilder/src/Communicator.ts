@@ -35,6 +35,13 @@ class Communcator implements COM {
 			this.protocolfilter.splice(index, 1);
 		}
 	}
+	sendProtocolFilter(): void {
+		this.out({
+			topic: NodeRedMessage.ProtocolFilter,
+			protocol: Protocol.ProtocolFilter,
+			payload: this.protocolfilter,
+		});
+	}
 	in(msg: any): void {
 		if (!msg.protocol) {
 			return;
@@ -43,11 +50,7 @@ class Communcator implements COM {
 			return;
 		}
 		if (msg.topic == NodeRedMessage.ProtocolFilter) {
-			this.out({
-				topic: NodeRedMessage.ProtocolFilter,
-				protocol: Protocol.ProtocolFilter,
-				payload: this.protocolfilter,
-			});
+			this.sendProtocolFilter();
 			return;
 		}
 		if (msg.topic == NodeRedMessage.SensorUpdate) {

@@ -246,13 +246,14 @@
         "id": "c0a36ddc.5194f",
         "type": "function",
         "z": "f56ccabd.7567e8",
-        "name": "",
+        "name": "device config",
         "func": "var controllers = []\nvar devices = []\nvar switches = []\nObject.keys(msg.payload.controllers).forEach(c => createController(c))\nObject.keys(msg.payload.devices).forEach(c => createDevice(c))\nObject.keys(msg.payload.switches).forEach(c => createSwitch(c))\nfunction createController(e){\n    controllers.push(e)\n    global.set(msg.payload.controllers[e].name,msg.payload.controllers[e])\n}\nfunction createDevice(e){\n    devices.push(e)\n    global.set(e,msg.payload.devices[e])\n}\nfunction createSwitch(e){\n    switches.push(e)\n    global.set(e,msg.payload.switches[e])\n}\nglobal.set(\"devices\",devices)\nglobal.set(\"controllers\",controllers)\nglobal.set(\"switches\",switches)\n\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
-        "x": 470,
+        "libs": [],
+        "x": 480,
         "y": 40,
         "wires": [
             [
@@ -265,14 +266,14 @@
         "type": "debug",
         "z": "f56ccabd.7567e8",
         "name": "",
-        "active": true,
+        "active": false,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
         "complete": "false",
         "statusVal": "",
         "statusType": "auto",
-        "x": 620,
+        "x": 650,
         "y": 40,
         "wires": []
     },
@@ -494,7 +495,7 @@
         "type": "function",
         "z": "f56ccabd.7567e8",
         "name": "convert to message",
-        "func": "let pf = global.get('protocolFilter') || []\nfunction updateClient(name,force){\n    let client = global.get(name)\n    if(client && client.controller){\n        let controller = global.get(client.controller.name)\n        client.lastupdate = controller.lastupdate\n        if(client.controller.prop == msg.command || force){\n            if(client.state != controller.states[client.controller.prop]){\n                client.state = controller.states[client.controller.prop]\n                if(force){\n                    client.desiredstate = client.state\n                }\n                \n            }\n        }\n        if(pf.includes(client.name)){\n             node.send({topic:\"deviceUpdate\", protocol:client.name, payload:{state:client.state,auto:client.auto,lastupdate:client.lastupdate}})\n        }\n        global.set(client.name,client)\n    }\n}\n\nfunction checkClientState(name){\n    let client = global.get(name)\n    if(client){\n        if(client.desiredstate != \"INIT\" && client.desiredstate != client.state){\n            node.send({topic:\"stateMismatchUpdate\", source:client.name, payload:client.desiredstate})\n        }\n        else{\n            updateClient(name,true)\n        }\n    }\n}\n\nfunction sendSensors(c){\n    let controller = global.get(c)\n    if(controller && controller.sensors){\n        Object.keys(controller.sensors).forEach(sensor => {\n            Object.keys(controller.sensors[sensor]).forEach(prop => {\n                if(prop != \"name\" && prop != \"lastupdate\"){\n                    var p = [c,sensor,prop].join('.')\n                    if(pf.includes(p)){\n                        node.send({topic:\"sensorUpdate\",protocol:p,payload:controller.sensors[sensor][prop],timestamp:controller.sensors[sensor].lastupdate})\n                    }\n                }\n            })\n        })\n    }\n}\n\nfunction sendConnection(name){\n    var c = global.get(name)\n    if(c){\n        var p = [c.name,'connection'].join('.')\n        if(pf.includes(p)){\n            var pl = Object.assign({}, c.connection);\n            pl.name = c.displayname\n            node.send({topic:\"controllerConnection\",protocol:p,payload:pl,timestamp:c.lastupdate}) \n        }\n    }\n}\n\n\n\nswitch(msg.command){\n    case \"SENSOR\":{\n        sendConnection(msg.target)\n        sendSensors(msg.target)\n        break\n    }\n    case \"POWER\":\n    case \"POWER1\":\n    case \"POWER2\":\n    case \"RESULT\":{\n        msg.payload.forEach(client => updateClient(client))\n        break;\n    }\n    case \"STATE\": {\n        msg.payload.forEach(client => checkClientState(client))\n        break;\n    }\n    case \"LWT\":{\n        sendConnection(msg.target)\n        break\n    }\n    default:{\n        \n        \n    }\n}",
+        "func": "let pf = global.get('protocolFilter') || []\nfunction updateClient(name,force){\n    let client = global.get(name)\n    if(client && client.controller){\n        let controller = global.get(client.controller.name)\n        client.lastupdate = controller.lastupdate\n        if(client.controller.prop == msg.command || force){\n            if(client.state != controller.states[client.controller.prop]){\n                client.state = controller.states[client.controller.prop]\n                if(force){\n                    client.desiredstate = client.state\n                }\n                \n            }\n        }\n        if(pf.includes(client.name)){\n             node.send({topic:\"deviceUpdate\", protocol:client.name, payload:{state:client.state,auto:client.auto,lastupdate:client.lastupdate}})\n        }\n        global.set(client.name,client)\n    }\n}\n\nfunction checkClientState(name){\n    let client = global.get(name)\n    if(client){\n        if(client.desiredstate != \"INIT\" && client.desiredstate != client.state){\n            node.send({topic:\"stateMismatchUpdate\", source:client.name, payload:client.desiredstate})\n        }\n        else{\n            updateClient(name,true)\n        }\n    }\n}\n\nfunction sendSensors(c){\n    let controller = global.get(c)\n    if(controller && controller.sensors){\n        Object.keys(controller.sensors).forEach(sensor => {\n            Object.keys(controller.sensors[sensor]).forEach(prop => {\n                if(prop != \"name\" && prop != \"lastupdate\"){\n                    var p = [c,sensor,prop].join('.')\n                    if(pf.includes(p)){\n                            node.send({\n                                topic:\"sensorUpdate\",\n                                protocol:p,\n                                payload:controller.sensors[sensor][prop],\n                                timestamp:controller.sensors[sensor].lastupdate\n                            }\n                        )\n                    }\n                }\n            })\n        })\n    }\n}\n\nfunction sendConnection(name){\n    var c = global.get(name)\n    if(c){\n        var p = [c.name,'connection'].join('.')\n        if(pf.includes(p)){\n            var pl = Object.assign({}, c.connection);\n            pl.name = c.displayname\n            node.send({topic:\"controllerConnection\",protocol:p,payload:pl,timestamp:c.lastupdate}) \n        }\n    }\n}\n\n\n\nswitch(msg.command){\n    case \"SENSOR\":{\n        sendConnection(msg.target)\n        sendSensors(msg.target)\n        break\n    }\n    case \"POWER\":\n    case \"POWER1\":\n    case \"POWER2\":\n    case \"RESULT\":{\n        msg.payload.forEach(client => updateClient(client))\n        break;\n    }\n    case \"STATE\": {\n        msg.payload.forEach(client => checkClientState(client))\n        break;\n    }\n    case \"LWT\":{\n        sendConnection(msg.target)\n        break\n    }\n    default:{\n        \n        \n    }\n}",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
@@ -631,8 +632,7 @@
         "y": 200,
         "wires": [
             [
-                "fc65eb8e.101568",
-                "6b87bb98.c4a494"
+                "fc65eb8e.101568"
             ],
             [
                 "58ad6961.8135a8"
@@ -892,8 +892,8 @@
             "77279945.627938",
             "4e7142f8.6a683c"
         ],
-        "x": 75,
-        "y": 600,
+        "x": 95,
+        "y": 520,
         "wires": [
             [
                 "efd1a703.f31b08"
@@ -916,12 +916,11 @@
         "useSecurity": false,
         "sessionLength": 432000,
         "tokenAutoExtend": false,
-        "x": 140,
+        "x": 200,
         "y": 520,
         "wires": [
             [
-                "6468fb15.8f3114",
-                "ed753c5b.03f8"
+                "6468fb15.8f3114"
             ],
             [
                 "38d1dfd4.1cf65"
@@ -1120,8 +1119,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 430,
-        "y": 460,
+        "x": 490,
+        "y": 500,
         "wires": [
             [
                 "b42ec43e.9a72b8"
@@ -1139,8 +1138,8 @@
         "links": [
             "7bb9ea7f.8aec24"
         ],
-        "x": 535,
-        "y": 440,
+        "x": 595,
+        "y": 460,
         "wires": []
     },
     {
@@ -1154,12 +1153,11 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 340,
-        "y": 580,
+        "x": 380,
+        "y": 560,
         "wires": [
             [
-                "77279945.627938",
-                "910f5545.ebd228"
+                "77279945.627938"
             ]
         ]
     },
@@ -1171,25 +1169,8 @@
         "links": [
             "7bb9ea7f.8aec24"
         ],
-        "x": 455,
-        "y": 600,
-        "wires": []
-    },
-    {
-        "id": "ed753c5b.03f8",
-        "type": "debug",
-        "z": "f56ccabd.7567e8",
-        "name": "CLIENT",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "true",
-        "targetType": "full",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 320,
-        "y": 500,
+        "x": 515,
+        "y": 560,
         "wires": []
     },
     {
@@ -1439,23 +1420,6 @@
         ]
     },
     {
-        "id": "910f5545.ebd228",
-        "type": "debug",
-        "z": "f56ccabd.7567e8",
-        "name": "CONTROL",
-        "active": false,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "true",
-        "targetType": "full",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 690,
-        "y": 540,
-        "wires": []
-    },
-    {
         "id": "86c14ec6.8e7f9",
         "type": "link in",
         "z": "f56ccabd.7567e8",
@@ -1470,23 +1434,6 @@
                 "9581b2c8.b659d"
             ]
         ]
-    },
-    {
-        "id": "6b87bb98.c4a494",
-        "type": "debug",
-        "z": "f56ccabd.7567e8",
-        "name": "",
-        "active": false,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "true",
-        "targetType": "full",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 1220,
-        "y": 100,
-        "wires": []
     },
     {
         "id": "6468fb15.8f3114",
@@ -1508,8 +1455,8 @@
         "checkall": "true",
         "repair": false,
         "outputs": 2,
-        "x": 290,
-        "y": 440,
+        "x": 350,
+        "y": 480,
         "wires": [
             [
                 "84b430bf.cf5f2"
@@ -1530,8 +1477,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 430,
-        "y": 420,
+        "x": 490,
+        "y": 460,
         "wires": [
             [
                 "b42ec43e.9a72b8"
@@ -1546,8 +1493,8 @@
         "links": [
             "86c14ec6.8e7f9"
         ],
-        "x": 535,
-        "y": 480,
+        "x": 595,
+        "y": 500,
         "wires": []
     }
 ]

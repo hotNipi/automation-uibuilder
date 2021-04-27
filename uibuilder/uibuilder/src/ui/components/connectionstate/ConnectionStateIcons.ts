@@ -1,8 +1,6 @@
 ///<reference path="StateData.ts" />
 class ConnectionStateIcons {
-	private protocolList: Protocol[];
 	private html: HTMLDivElement;
-	private items: StateData[];
 	private timeout: number;
 	private duration: number;
 	private current: number;
@@ -10,16 +8,17 @@ class ConnectionStateIcons {
 	private nameField: HTMLSpanElement;
 	private unitField: HTMLSpanElement;
 	private icon: HTMLElement;
-	private isStarted: boolean;
 	private startInterval: number;
+	private getCount: () => number;
+	private getItem: (idx: number) => StateData;
 
-	constructor() {
+	constructor(getItemFromIndex: (idx: number) => StateData, getCount: () => number) {
 		this.timeout = -1;
 		this.startInterval = -1;
 		this.current = -1;
 		this.duration = 6000;
-		this.items = [];
-		this.isStarted = false;
+		this.getCount = getCount;
+		this.getItem = getItemFromIndex;
 		this.init();
 	}
 	dispose(): void {
@@ -29,28 +28,16 @@ class ConnectionStateIcons {
 		if (this.startInterval) {
 			clearInterval(this.startInterval);
 		}
-		ClientEventDispacher.unregister(ClientEvents.ControllerConnection, this.onUpdate, this);
-		this.items.forEach((item) => this.destroy(item));
 		while (this.html.firstChild) {
 			this.html.removeChild(this.html.lastChild);
 		}
-		this.items = null;
+		this.current = -1;
 		this.html = null;
-	}
-	private destroy(item: StateData): void {
-		COM.removeProtocolFilter(item.getProtocol());
-		item.dispose();
-		item = null;
 	}
 	getHtml(): HTMLDivElement {
 		return this.html;
 	}
-	setProtocol(protocol: Protocol[]): void {
-		ClientEventDispacher.register(ClientEvents.ControllerConnection, this.onUpdate, this);
-		this.protocolList = protocol;
-		this.protocolList.forEach((p) => this.build(p));
-		this.startInterval = setInterval(this.tryToStart.bind(this), 100);
-	}
+
 	private init(): void {
 		this.html = document.createElement('div');
 		this.html.className = 'wifistate';
@@ -67,29 +54,22 @@ class ConnectionStateIcons {
 		this.nameField.className = 'name';
 		this.html.appendChild(this.nameField);
 		this.html.addEventListener('click', this.onClick.bind(this));
-	}
-	private build(protocol: Protocol): void {
-		COM.setProtocolFilter(protocol);
-		var item = new StateData(protocol);
-		this.items.push(item);
+		this.startInterval = setInterval(this.tryToStart.bind(this), 100);
 	}
 
 	private tryToStart() {
-		if (!this.items) {
+		var item = this.getItem(0);
+		if (!item) {
 			return;
 		}
-		if (this.items.length == 0) {
-			return;
-		}
-		if (this.items[0].isReady()) {
-			this.isStarted = true;
+		if (item.isReady()) {
 			clearInterval(this.startInterval);
 			this.showNext();
 		}
 	}
 	private showNext(): void {
 		this.current++;
-		if (this.current == this.items.length) {
+		if (this.current == this.getCount()) {
 			this.current = 0;
 		}
 		this.show(this.current);
@@ -99,31 +79,20 @@ class ConnectionStateIcons {
 		}, this.duration);
 	}
 	private show(i: number): void {
-		var val: number = this.items[i].getValue();
+		var item = this.getItem(i);
+		var val: number = item.getValue();
 		this.valueField.innerText = val.toString();
-		this.nameField.innerText = this.items[i].getName();
+		this.nameField.innerText = item.getName();
 		this.unitField.innerText = 'RSSI';
 		this.icon.classList.remove('poor', 'good', 'bad');
-		var c: string = !this.items[i].getStatus()
-			? 'bad'
-			: val > 20
-			? 'good'
-			: val > 10
-			? 'poor'
-			: 'bad';
+		var c: string = !item.getStatus() ? 'bad' : val > 20 ? 'good' : val > 10 ? 'poor' : 'bad';
 		this.icon.classList.add(c);
 	}
 	private onClick(): void {
-		if (!this.items) {
+		var item = this.getItem(this.current);
+		if (!item) {
 			return;
 		}
-		window.open('http://' + this.items[this.current].getLink());
-	}
-	private onUpdate(msg: ControllerConnection): void {
-		if (!this.protocolList.includes(msg.protocol)) {
-			return;
-		}
-		var item = this.items.find((i) => i.getProtocol() == msg.protocol);
-		item.update(msg);
+		window.open('http://' + item.getLink());
 	}
 }

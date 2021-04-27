@@ -12,6 +12,26 @@ class DefaultView implements IView {
 	build(): void {
 		var cards: any = [
 			{
+				label: 'WIFI',
+				sublabel: 'Seadmete ühendus',
+				icon: 'fa fa-wifi',
+				type: Cards.ConnectionStateCard,
+				grow: GrowMode.Both,
+				protocol: [
+					Protocol.SonoffAmpConnection,
+					Protocol.SonoffBackLightConnection,
+					Protocol.SonoffBedConnection,
+					Protocol.SonoffExtraHeatConnection,
+					Protocol.SonoffFloorHeatingTempsConnection,
+					Protocol.SonoffKitchenShelfConnection,
+					Protocol.SonoffSaunConnection,
+					//Protocol.SonoffSocketConnction,
+					Protocol.SonoffTempRegConnection,
+					Protocol.SonoffThWcConnection,
+					Protocol.SonoffWashingMashineConnection,
+				],
+			},
+			{
 				label: 'saun',
 				sublabel: 'leiliruum',
 				icon: 'fa fa-thermometer',
@@ -175,26 +195,6 @@ class DefaultView implements IView {
 				grow: GrowMode.Width,
 				deviceType: DeviceType.Light,
 				protocol: [Protocol.BedUnderLight],
-			},
-			{
-				label: 'WIFI',
-				sublabel: 'Seadmete ühendus',
-				icon: 'fa fa-wifi',
-				type: Cards.ConnectionStateCard,
-				grow: GrowMode.Both,
-				protocol: [
-					Protocol.SonoffAmpConnection,
-					Protocol.SonoffBackLightConnection,
-					Protocol.SonoffBedConnection,
-					Protocol.SonoffExtraHeatConnection,
-					Protocol.SonoffFloorHeatingTempsConnection,
-					Protocol.SonoffKitchenShelfConnection,
-					Protocol.SonoffSaunConnection,
-					Protocol.SonoffSocketConnction,
-					Protocol.SonoffTempRegConnection,
-					Protocol.SonoffThWcConnection,
-					Protocol.SonoffWashingMashineConnection,
-				],
 			},
 		];
 
