@@ -434,6 +434,7 @@ var ConnectionStateChart = (function () {
             node = document.createElement('div');
             node.className = 'rowline';
             node.setAttribute('id', 'line_' + item.getProtocol());
+            node.addEventListener('click', this.onClick.bind(this));
             node.style.width = 0 + '%';
             var c = !item.getStatus()
                 ? 'bad-bg'
@@ -455,6 +456,14 @@ var ConnectionStateChart = (function () {
     ConnectionStateChart.prototype.updateAll = function () {
         var _this = this;
         this.protocolList.forEach(function (p) { return _this.update(p); });
+    };
+    ConnectionStateChart.prototype.onClick = function (evt) {
+        var p = evt.target.id.split('_')[1];
+        var item = this.getItem(p);
+        if (!item) {
+            return;
+        }
+        window.open('http://' + item.getLink());
     };
     return ConnectionStateChart;
 }());

@@ -53,6 +53,7 @@ class ConnectionStateChart {
 			node = document.createElement('div');
 			node.className = 'rowline';
 			node.setAttribute('id', 'line_' + item.getProtocol());
+			node.addEventListener('click', this.onClick.bind(this));
 			node.style.width = 0 + '%';
 			var c: string = !item.getStatus()
 				? 'bad-bg'
@@ -73,5 +74,13 @@ class ConnectionStateChart {
 	}
 	private updateAll(): void {
 		this.protocolList.forEach((p) => this.update(p));
+	}
+	private onClick(evt: Event): void {
+		var p: string = (evt.target as Element).id.split('_')[1];
+		var item: StateData = this.getItem(p as Protocol);
+		if (!item) {
+			return;
+		}
+		window.open('http://' + item.getLink());
 	}
 }
