@@ -1302,8 +1302,8 @@
         "topic": "",
         "payload": "{\"group\":{\"hide\":\"Home_Default\"}}",
         "payloadType": "json",
-        "x": 190,
-        "y": 80,
+        "x": 240,
+        "y": 140,
         "wires": [
             [
                 "93a7733d.cbd0f",
@@ -1336,78 +1336,5 @@
         "x": 450,
         "y": 200,
         "wires": []
-    },
-    {
-        "id": "af4dde07.a8623",
-        "type": "ui_button",
-        "z": "63163740.2d4508",
-        "name": "",
-        "group": "89295a31.c00768",
-        "order": 1,
-        "width": 0,
-        "height": 0,
-        "passthru": false,
-        "label": "show",
-        "tooltip": "",
-        "color": "",
-        "bgcolor": "",
-        "icon": "",
-        "payload": "show",
-        "payloadType": "str",
-        "topic": "topic",
-        "topicType": "msg",
-        "x": 170,
-        "y": 140,
-        "wires": [
-            [
-                "13cf0ac.b28acf5"
-            ]
-        ]
-    },
-    {
-        "id": "bc5fc235.12649",
-        "type": "ui_button",
-        "z": "63163740.2d4508",
-        "name": "",
-        "group": "89295a31.c00768",
-        "order": 1,
-        "width": 0,
-        "height": 0,
-        "passthru": false,
-        "label": "hide",
-        "tooltip": "",
-        "color": "",
-        "bgcolor": "",
-        "icon": "",
-        "payload": "hide",
-        "payloadType": "str",
-        "topic": "topic",
-        "topicType": "msg",
-        "x": 170,
-        "y": 180,
-        "wires": [
-            [
-                "13cf0ac.b28acf5"
-            ]
-        ]
-    },
-    {
-        "id": "13cf0ac.b28acf5",
-        "type": "function",
-        "z": "63163740.2d4508",
-        "name": "",
-        "func": "var hide = {\"group\":{\"hide\":\"Home_Default\"}}\nvar show = {\"group\":{\"show\":\"Home_Default\"}}\n\nmsg.payload = msg.payload == \"hide\" ? hide : show\nreturn msg;",
-        "outputs": 1,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 310,
-        "y": 180,
-        "wires": [
-            [
-                "3774decf.b167b2"
-            ]
-        ]
     }
 ]
