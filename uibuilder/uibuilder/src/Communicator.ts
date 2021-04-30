@@ -4,6 +4,10 @@ interface COM {
 	out: (msg: any) => void;
 	setProtocolFilter: (p: Protocol) => void;
 	removeProtocolFilter: (p: Protocol) => void;
+	sendProtocolChannelRequest: (p: Protocol) => void;
+	sendProtocolChannelClose: (p: Protocol) => void;
+	sendProtocolValueRequest: (p: Protocol) => void;
+	sessionEstablished: () => boolean;
 	setReceiver: (r: any) => void;
 	connection: (flag: boolean) => void;
 }
@@ -14,6 +18,7 @@ class Communcator implements COM {
 	private connected: boolean;
 	constructor() {
 		this.receiver = null;
+		this.connected = false;
 		this.protocolfilter = [Protocol.ProtocolFilter];
 	}
 	connection(flag: boolean): void {
@@ -23,6 +28,9 @@ class Communcator implements COM {
 		} else {
 			ClientEventDispacher.dispatch({type: ClientEvents.Disconnected});
 		}
+	}
+	sessionEstablished(): boolean {
+		return this.connected;
 	}
 	setProtocolFilter(p: Protocol): void {
 		if (!this.protocolfilter.includes(p)) {
@@ -35,6 +43,26 @@ class Communcator implements COM {
 			this.protocolfilter.splice(index, 1);
 		}
 	}
+	sendProtocolChannelRequest(p: Protocol): void {
+		this.setProtocolFilter(p);
+		this.out({
+			topic: NodeRedMessage.RequestProtocolChannel,
+			protocol: p,
+		});
+	}
+	sendProtocolChannelClose(p: Protocol): void {
+		this.removeProtocolFilter(p);
+		this.out({
+			topic: NodeRedMessage.CloseProtocolChannel,
+			protocol: p,
+		});
+	}
+	sendProtocolValueRequest(p: Protocol): void {
+		this.out({
+			topic: NodeRedMessage.RequestProtocolValue,
+			protocol: p,
+		});
+	}
 	sendProtocolFilter(): void {
 		this.out({
 			topic: NodeRedMessage.ProtocolFilter,
@@ -46,11 +74,14 @@ class Communcator implements COM {
 		if (!msg.protocol) {
 			return;
 		}
+		if (!this.connected) {
+			this.connection(true);
+		}
 		if (!this.protocolfilter.includes(msg.protocol)) {
 			return;
 		}
 		if (msg.topic == NodeRedMessage.ProtocolFilter) {
-			this.sendProtocolFilter();
+			this.sendProtocolChannelRequest(Protocol.ProtocolFilter);
 			return;
 		}
 		if (msg.topic == NodeRedMessage.SensorUpdate) {

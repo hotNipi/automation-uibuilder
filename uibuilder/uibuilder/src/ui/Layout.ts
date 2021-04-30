@@ -21,6 +21,6 @@ class Layout {
 		this.root.style.filter = 'unset';
 	}
 	private onConnectionLost() {
-		this.root.style.filter = 'sepia(100%) blur(1px)';
+		this.root.style.filter = 'sepia(100%)';
 	}
 }

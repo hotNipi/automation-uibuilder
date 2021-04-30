@@ -14,7 +14,7 @@ class ConnectionStateController {
 		this.protocolList = null;
 	}
 	private destroy(item: StateData): void {
-		COM.removeProtocolFilter(item.getProtocol());
+		COM.sendProtocolChannelClose(item.getProtocol());
 		item.dispose();
 		item = null;
 	}
@@ -47,14 +47,33 @@ class ConnectionStateController {
 		return this.items.find((i) => i.getProtocol() == p);
 	}
 	setProtocol(protocol: Protocol[]): void {
-		ClientEventDispacher.register(ClientEvents.ControllerConnection, this.onUpdate, this);
 		this.protocolList = protocol;
-		this.protocolList.forEach((p) => this.build(p));
+
+		this.connect();
 	}
+
+	private connect(): void {
+		ClientEventDispacher.register(ClientEvents.ControllerConnection, this.onUpdate, this);
+		if (COM.sessionEstablished()) {
+			this.onConnection();
+		} else {
+			ClientEventDispacher.register(ClientEvents.Connected, this.onConnection, this);
+		}
+	}
+	private onConnection(): void {
+		this.protocolList.forEach((p) => this.register(p));
+	}
+
+	private register(p: Protocol): void {
+		this.build(p);
+		COM.sendProtocolChannelRequest(p);
+	}
+
 	private build(protocol: Protocol): void {
-		COM.setProtocolFilter(protocol);
-		var item = new StateData(protocol);
-		this.items.push(item);
+		if (!this.getItem(protocol)) {
+			var item = new StateData(protocol);
+			this.items.push(item);
+		}
 	}
 	private onUpdate(msg: ControllerConnection): void {
 		if (!this.protocolList.includes(msg.protocol)) {

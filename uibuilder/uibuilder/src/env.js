@@ -52,6 +52,9 @@ var BaseCard = (function () {
         this.head.onclick = this.resize.bind(this);
         this.html.appendChild(this.head);
     };
+    BaseCard.prototype.connect = function () {
+        throw Error('not implemented');
+    };
     BaseCard.prototype.resize = function () {
         if (this.large) {
             this.large = false;
@@ -189,7 +192,7 @@ var GaugeCard = (function (_super) {
     }
     GaugeCard.prototype.dispose = function () {
         ClientEventDispacher.unregister(2, this.onSensorUpdate, this);
-        COM.removeProtocolFilter(this.protocol);
+        COM.sendProtocolChannelClose(this.protocol);
         this.content.dispose();
         this.content = null;
         this.header = null;
@@ -202,7 +205,7 @@ var GaugeCard = (function (_super) {
     };
     GaugeCard.prototype.setProtocol = function (p) {
         this.protocol = p[0];
-        COM.setProtocolFilter(this.protocol);
+        this.connect();
     };
     GaugeCard.prototype.setHeader = function (main, sub, icon) {
         _super.prototype.setHeader.call(this, main, sub, icon);
@@ -227,7 +230,18 @@ var GaugeCard = (function (_super) {
         this.head.appendChild(this.subheader);
         this.content = new FillGauge(15, 100);
         this.html.appendChild(this.content.getHTML());
+    };
+    GaugeCard.prototype.connect = function () {
         ClientEventDispacher.register(2, this.onSensorUpdate, this);
+        if (COM.sessionEstablished()) {
+            this.onConnection();
+        }
+        else {
+            ClientEventDispacher.register(0, this.onConnection, this);
+        }
+    };
+    GaugeCard.prototype.onConnection = function () {
+        COM.sendProtocolChannelRequest(this.protocol);
     };
     GaugeCard.prototype.onSensorUpdate = function (msg) {
         if (msg.protocol == this.protocol) {
@@ -243,7 +257,7 @@ var DeviceControls = (function () {
     }
     DeviceControls.prototype.dispose = function () {
         ClientEventDispacher.unregister(3, this.onDeviceUpdate, this);
-        COM.removeProtocolFilter(this.protocol);
+        COM.sendProtocolChannelClose(this.protocol);
         while (this.html.firstChild) {
             this.html.removeChild(this.html.lastChild);
         }
@@ -257,8 +271,19 @@ var DeviceControls = (function () {
     };
     DeviceControls.prototype.setProtocol = function (p) {
         this.protocol = p[0];
-        COM.setProtocolFilter(this.protocol);
+        this.connect();
+    };
+    DeviceControls.prototype.connect = function () {
         ClientEventDispacher.register(3, this.onDeviceUpdate, this);
+        if (COM.sessionEstablished()) {
+            this.onConnection();
+        }
+        else {
+            ClientEventDispacher.register(0, this.onConnection, this);
+        }
+    };
+    DeviceControls.prototype.onConnection = function () {
+        COM.sendProtocolChannelRequest(this.protocol);
     };
     DeviceControls.prototype.init = function () {
         this.html = document.createElement('div');
@@ -605,7 +630,7 @@ var ConnectionStateController = (function () {
         this.protocolList = null;
     };
     ConnectionStateController.prototype.destroy = function (item) {
-        COM.removeProtocolFilter(item.getProtocol());
+        COM.sendProtocolChannelClose(item.getProtocol());
         item.dispose();
         item = null;
     };
@@ -635,15 +660,31 @@ var ConnectionStateController = (function () {
         return this.items.find(function (i) { return i.getProtocol() == p; });
     };
     ConnectionStateController.prototype.setProtocol = function (protocol) {
-        var _this = this;
-        ClientEventDispacher.register(4, this.onUpdate, this);
         this.protocolList = protocol;
-        this.protocolList.forEach(function (p) { return _this.build(p); });
+        this.connect();
+    };
+    ConnectionStateController.prototype.connect = function () {
+        ClientEventDispacher.register(4, this.onUpdate, this);
+        if (COM.sessionEstablished()) {
+            this.onConnection();
+        }
+        else {
+            ClientEventDispacher.register(0, this.onConnection, this);
+        }
+    };
+    ConnectionStateController.prototype.onConnection = function () {
+        var _this = this;
+        this.protocolList.forEach(function (p) { return _this.register(p); });
+    };
+    ConnectionStateController.prototype.register = function (p) {
+        this.build(p);
+        COM.sendProtocolChannelRequest(p);
     };
     ConnectionStateController.prototype.build = function (protocol) {
-        COM.setProtocolFilter(protocol);
-        var item = new StateData(protocol);
-        this.items.push(item);
+        if (!this.getItem(protocol)) {
+            var item = new StateData(protocol);
+            this.items.push(item);
+        }
     };
     ConnectionStateController.prototype.onUpdate = function (msg) {
         if (!this.protocolList.includes(msg.protocol)) {
@@ -966,7 +1007,7 @@ var Layout = (function () {
         this.root.style.filter = 'unset';
     };
     Layout.prototype.onConnectionLost = function () {
-        this.root.style.filter = 'sepia(100%) blur(1px)';
+        this.root.style.filter = 'sepia(100%)';
     };
     return Layout;
 }());
@@ -974,6 +1015,7 @@ var COM;
 var Communcator = (function () {
     function Communcator() {
         this.receiver = null;
+        this.connected = false;
         this.protocolfilter = ["node-red.protocol"];
     }
     Communcator.prototype.connection = function (flag) {
@@ -984,6 +1026,9 @@ var Communcator = (function () {
         else {
             ClientEventDispacher.dispatch({ type: 1 });
         }
+    };
+    Communcator.prototype.sessionEstablished = function () {
+        return this.connected;
     };
     Communcator.prototype.setProtocolFilter = function (p) {
         if (!this.protocolfilter.includes(p)) {
@@ -996,6 +1041,26 @@ var Communcator = (function () {
             this.protocolfilter.splice(index, 1);
         }
     };
+    Communcator.prototype.sendProtocolChannelRequest = function (p) {
+        this.setProtocolFilter(p);
+        this.out({
+            topic: "requestProtocolChannel",
+            protocol: p,
+        });
+    };
+    Communcator.prototype.sendProtocolChannelClose = function (p) {
+        this.removeProtocolFilter(p);
+        this.out({
+            topic: "closeProtocolChannel",
+            protocol: p,
+        });
+    };
+    Communcator.prototype.sendProtocolValueRequest = function (p) {
+        this.out({
+            topic: "requestProtocolValue",
+            protocol: p,
+        });
+    };
     Communcator.prototype.sendProtocolFilter = function () {
         this.out({
             topic: "protocolFilter",
@@ -1007,11 +1072,14 @@ var Communcator = (function () {
         if (!msg.protocol) {
             return;
         }
+        if (!this.connected) {
+            this.connection(true);
+        }
         if (!this.protocolfilter.includes(msg.protocol)) {
             return;
         }
         if (msg.topic == "protocolFilter") {
-            this.sendProtocolFilter();
+            this.sendProtocolChannelRequest("node-red.protocol");
             return;
         }
         if (msg.topic == "sensorUpdate") {

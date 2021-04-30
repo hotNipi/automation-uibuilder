@@ -9,7 +9,7 @@ class GaugeCard extends BaseCard implements IGaugeCard {
 
 	dispose(): void {
 		ClientEventDispacher.unregister(ClientEvents.SensorUpdate, this.onSensorUpdate, this);
-		COM.removeProtocolFilter(this.protocol);
+		COM.sendProtocolChannelClose(this.protocol);
 		this.content.dispose();
 		this.content = null;
 		this.header = null;
@@ -22,7 +22,7 @@ class GaugeCard extends BaseCard implements IGaugeCard {
 	}
 	setProtocol(p: Protocol[]): void {
 		this.protocol = p[0];
-		COM.setProtocolFilter(this.protocol);
+		this.connect();
 	}
 
 	setHeader(main?: string, sub?: string, icon?: string): void {
@@ -50,7 +50,19 @@ class GaugeCard extends BaseCard implements IGaugeCard {
 
 		this.content = new FillGauge(15, 100);
 		this.html.appendChild(this.content.getHTML());
+	}
+
+	protected connect(): void {
 		ClientEventDispacher.register(ClientEvents.SensorUpdate, this.onSensorUpdate, this);
+		if (COM.sessionEstablished()) {
+			this.onConnection();
+		} else {
+			ClientEventDispacher.register(ClientEvents.Connected, this.onConnection, this);
+		}
+	}
+
+	private onConnection(): void {
+		COM.sendProtocolChannelRequest(this.protocol);
 	}
 	private onSensorUpdate(msg: SensorUpdate): void {
 		if (msg.protocol == this.protocol) {

@@ -43,6 +43,10 @@ class BaseCard implements ICard {
 		this.html.appendChild(this.head);
 	}
 
+	protected connect(): void {
+		throw Error('not implemented');
+	}
+
 	protected resize(): void {
 		if (this.large) {
 			this.large = false;

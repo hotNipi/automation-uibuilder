@@ -20,7 +20,7 @@ class DeviceControls {
 	}
 	dispose(): void {
 		ClientEventDispacher.unregister(ClientEvents.DeviceUpdate, this.onDeviceUpdate, this);
-		COM.removeProtocolFilter(this.protocol);
+		COM.sendProtocolChannelClose(this.protocol);
 		while (this.html.firstChild) {
 			this.html.removeChild(this.html.lastChild);
 		}
@@ -34,9 +34,21 @@ class DeviceControls {
 	}
 	setProtocol(p: Protocol[]): void {
 		this.protocol = p[0];
-		COM.setProtocolFilter(this.protocol);
-		ClientEventDispacher.register(ClientEvents.DeviceUpdate, this.onDeviceUpdate, this);
+		this.connect();
 	}
+	protected connect(): void {
+		ClientEventDispacher.register(ClientEvents.DeviceUpdate, this.onDeviceUpdate, this);
+		if (COM.sessionEstablished()) {
+			this.onConnection();
+		} else {
+			ClientEventDispacher.register(ClientEvents.Connected, this.onConnection, this);
+		}
+	}
+
+	private onConnection(): void {
+		COM.sendProtocolChannelRequest(this.protocol);
+	}
+
 	private init(): void {
 		this.html = document.createElement('div');
 		this.html.className = 'devicecontrols';
@@ -60,6 +72,7 @@ class DeviceControls {
 
 		this.html.appendChild(this.updateField);
 	}
+
 	private onDeviceUpdate(msg: DeviceUpdate): void {
 		if (msg.protocol != this.protocol) {
 			return;

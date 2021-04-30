@@ -3,4 +3,7 @@ const enum NodeRedMessage {
 	DeviceUpdate = 'deviceUpdate',
 	ProtocolFilter = 'protocolFilter',
 	ControllerConnection = 'controllerConnection',
+	RequestProtocolChannel = 'requestProtocolChannel',
+	RequestProtocolValue = 'requestProtocolValue',
+	CloseProtocolChannel = 'closeProtocolChannel',
 }
